@@ -1,0 +1,8 @@
+dotnet new console -n NombreProyecto    #Este comando genera un proyecto nuevo usando dotnet
+dotnet new webapi -n NombreApi          #Este comando genera un proyecto nuevo como API usando dotnet
+dotnet tool install --global dotnet-aspnet-codegenerator
+dotnet run                              #Este comando ejecuta el archivo Program.cs
+
+dotnet add package Antlr4.Runtime.Standard --version 4.9.3              #Agrega el paquete de antlr para poder usar archivos .g4
+antlr4 -Dlanguage=CSharp -visitor gramatica.g4 -o gramAntlr             #Este comando genera el parser y lexer del archivo antlr4, creando una carpeta llamada gramAntlr
+ 

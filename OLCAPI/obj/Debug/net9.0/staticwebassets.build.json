@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "xB4mSDyf2T/FwcLlta2HPluAweYLUDSmZBKZ2UFt7+c=",
+  "Source": "OLCAPI",
+  "BasePath": "_content/OLCAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}
