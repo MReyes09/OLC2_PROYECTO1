@@ -1,0 +1,143 @@
+// eslint-disable-next-line no-unused-vars
+import React, { useState, useEffect, useRef } from 'react';
+import './App.css';
+
+function App() {
+  const codeInputRef = useRef(null);
+  const consoleOutputRef = useRef(null);
+  const editorRef = useRef(null);
+  const consoleEditorRef = useRef(null);
+
+  useEffect(() => {
+    // Inicializa CodeMirror en el textarea con id 'codeInput'
+    if (codeInputRef.current && !editorRef.current) {
+      // eslint-disable-next-line no-undef
+      editorRef.current = CodeMirror.fromTextArea(codeInputRef.current, {
+        lineNumbers: true,
+        mode: 'javascript',
+        theme: 'dracula',
+        viewportMargin: Infinity,
+      });
+
+      editorRef.current.getWrapperElement().style.fontSize = '18px';
+    }
+
+    // Inicializa CodeMirror en el textarea con id 'consoleOutput'
+    if (consoleOutputRef.current && !consoleEditorRef.current) {
+      // eslint-disable-next-line no-undef
+      consoleEditorRef.current = CodeMirror.fromTextArea(consoleOutputRef.current, {
+        lineNumbers: false,
+        mode: 'text/plain',
+        theme: 'dracula',
+        readOnly: true,
+        viewportMargin: Infinity,
+      });
+      consoleEditorRef.current.getWrapperElement().style.fontSize = '18px';
+    }
+
+    const openButton = document.getElementById('openButton');
+    const runButton = document.getElementById('runButton');
+    const clearButton = document.getElementById('clearButton');
+
+    // función para el botón 'open'
+    const openFile = () => {
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.onchange = e => {
+        var file = e.target.files[0];
+        var reader = new FileReader();
+        reader.readAsText(file, 'UTF-8');
+        reader.onload = readerEvent => {
+          var content = readerEvent.target.result;
+          editorRef.current.setValue(content);
+        };
+      };
+      input.click();
+    };
+
+    // Función para el botón 'Run'
+
+    let output = '';
+    const runCode = async () => {
+      const code = editorRef.current.getValue();
+
+        try {
+          const response = await fetch('http://localhost:5031/compile', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ code }), // Enviar JSON correcto
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            output += `Error del servidor: ${errorText}\n`;
+          } else {
+            const data = await response.json();
+            console.log(data);
+            // Capturar la respuesta correctamente
+            if (data.result) {
+              output = data.result; // Mostrar directamente el resultado del visitor
+              consoleEditorRef.current.setValue(output);
+            } else {
+              output = 'No hay salida.';
+              consoleEditorRef.current.setValue(output);
+            }
+          }
+        } catch (error) {
+          output += 'Error al conectar con el servidor.\n';
+          console.error('Error:', error);
+        }
+      }
+
+
+    // función para el botón 'Clear'
+    const clearCode = () => {
+      editorRef.current.setValue('');
+      consoleEditorRef.current.setValue('');
+    };
+
+    openButton.addEventListener('click', openFile);
+    runButton.addEventListener('click', runCode);
+    clearButton.addEventListener('click', clearCode);
+
+    // Cleanup event listeners on component unmount
+    return () => {
+      openButton.removeEventListener('click', openFile);
+      runButton.removeEventListener('click', runCode);
+      clearButton.removeEventListener('click', clearCode);
+    };
+  }, []);
+
+  return (
+    <div className="App">
+      <div className="editor-container">
+        <div className="header">
+          <button id="openButton">
+            <span className="material-symbols-outlined">upload</span>
+          </button>
+          <button id="clearButton">
+            <span className="material-symbols-outlined">mop</span>
+          </button>
+          <button id="runButton">
+            <span className="material-symbols-outlined">play_arrow</span>
+          </button>
+        </div>
+        <div className="main">
+          <div className="editor">
+            <h3 id="textEditor">Code Input</h3>
+            <textarea id="codeInput" ref={codeInputRef}></textarea>
+          </div>
+          <div className="console">
+            <h3 id="textConsole">Console</h3>
+            <textarea id="consoleOutput" ref={consoleOutputRef}></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+

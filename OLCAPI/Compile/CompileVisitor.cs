@@ -1,16 +1,17 @@
 //using analyzer;
-
+using System.Globalization;
+using Antlr4.Runtime.Misc;
 public class CompilerVisitor : gramaticaBaseVisitor<object>
 {
     public string output = "";
     private Environment currentEnvironment = new Environment();
 
     // VisitProgram
-    public override object VisitProgram(gramaticaParser.ProgramContext context)
+    public override object VisitInicio(gramaticaParser.InicioContext context)
     {
-        foreach (var dcl in context.dcl())
+        foreach (var instrucciones in context.instrucciones())
         {
-            Visit(dcl);
+            Visit(instrucciones);
         }
         return null;
     }
@@ -19,7 +20,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public override object VisitVarDeclStmt(gramaticaParser.VarDeclStmtContext context)
     {
         var varDecl = context.varDcl();
-        string id = varDecl.ID().GetText();
+        string id = varDecl.ID_VARIABLE().GetText();
         string typeText = varDecl.type().GetText();
         SymbolType type = Enum.Parse<SymbolType>(typeText);
         object value = Visit(varDecl.expr());
@@ -51,7 +52,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     // VisitIdentifier
     public override object VisitIdentifier(gramaticaParser.IdentifierContext context)
     {
-        string id = context.ID().GetText();
+        string id = context.ID_VARIABLE().GetText();
         return currentEnvironment.GetVariable(id).Value;
     }
 
@@ -81,13 +82,18 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     // VisitDouble
     public override object VisitDouble(gramaticaParser.DoubleContext context)
     {
-        return double.Parse(context.GetText());
+        return double.Parse(context.GetText(), CultureInfo.InvariantCulture);
     }
 
     // VisitString
     public override object VisitString(gramaticaParser.StringContext context)
     {
         return context.GetText().Trim('"');
+    }
+
+    public override object VisitChar([NotNull] gramaticaParser.CharContext context)
+    {
+        return context.GetText().Trim('\'');
     }
 
     // VisitBoolean
@@ -102,8 +108,15 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         dynamic left = Visit(context.expr(0));
         dynamic right = Visit(context.expr(1));
 
-        if (left is string || right is string)
-            throw new Exception("Multiplication and division are not supported for strings.");
+        if (!(left is int || left is double) || !(right is int || right is double)){
+            output += "Error al operar *|/ los tipos de datos no son operables.\n";
+            return null;
+        }
+
+        if( right == 0 && context.op.Text == "/"){
+            output += "Error al operar / no se puede dividir entre 0.\n";
+            return null;
+        }
 
         return context.op.Text == "*" ? left * right : left / right;
     }
@@ -114,13 +127,15 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         dynamic left = Visit(context.expr(0));
         dynamic right = Visit(context.expr(1));
 
-        if (left is string && right is string && context.op.Text == "+")
-            return left + right; // Concatenación de strings
-
         if ((left is int || left is double) && (right is int || right is double))
             return context.op.Text == "+" ? left + right : left - right;
 
-        throw new Exception("Addition/Subtraction is only valid for numbers or concatenation of strings.");
+        if (left is string && right is string && context.op.Text == "+")
+            return (string)left + (string)right;
+
+        output += "Error al operar +|- los tipos de datos no son operables.\n";
+        return null;
+
     }
 
     // VisitCompare
@@ -182,7 +197,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
     public override object VisitAsignStmt(gramaticaParser.AsignStmtContext context){
         var varAsign = context.varAsign();
-        string id = varAsign.ID().GetText();
+        string id = varAsign.ID_VARIABLE().GetText();
         SymbolType type = Enum.Parse<SymbolType>("Integer");
         object value = Visit(varAsign.expr());
 

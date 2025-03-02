@@ -1,19 +1,32 @@
 grammar gramatica;
 
-program: dcl*;
+// ----------------- LEXER -----------------
+INT: [0-9]+;
+DOUBLE: [0-9]+ '.' [0-9]+;
+CHAR: '\'' . '\'';
+STRING: '"' .*? '"';
+BOOL: 'true' | 'false';
+BLANCOS: [ \t\r\n]+ -> skip;
+ID_VARIABLE: [a-zA-Z_]+;
+COMENTARIOLINEA: '//' .*? '\n' -> skip;
+COMENTARIOMULTILINEA: '/*' .*? '*/' -> skip;
 
-dcl: expr ';' # ExprStmt 
-    | 'print(' expr ')' ';' # PrintStmt
+
+// ----------------- PARSER -----------------
+inicio: instrucciones*;
+
+instrucciones: 'fmt.println(' expr ')' ';' # PrintStmt
+    | expr ';' # ExprStmt 
     | 'if (' expr ')' block ('else' block)? # IfStmt
 	| 'for (' expr ')' block # WhileStmt
 	| varAsign # AsignStmt
 	| varDcl #VarDeclStmt;
 
-block: '{' dcl* '}';
+block: '{' instrucciones* '}';
 
-varDcl: 'var' ID ':' type '=' expr ';';
+varDcl: 'var' ID_VARIABLE type '=' expr ';';
 
-varAsign: ID '=' expr ';' ;
+varAsign: ID_VARIABLE '=' expr ';' ;
 
 expr:
     '-' expr                  # Negate
@@ -26,14 +39,8 @@ expr:
     | DOUBLE                  # Double
     | STRING                  # String
     | BOOL                    # Boolean
-    | ID                      # Identifier
+    | ID_VARIABLE             # Identifier
+    | CHAR                    # Char
     | '(' expr ')'            # Parens;
 
-type: 'Integer' | 'Double' | 'String' | 'Boolean';
-
-INT: [0-9]+;
-DOUBLE: [0-9]+ '.' [0-9]+;
-STRING: '"' .*? '"';
-BOOL: 'true' | 'false';
-WS: [ \t\r\n]+ -> skip;
-ID: [a-zA-Z_]+;
+type: 'int' | 'float64' | 'string' | 'bool' | 'rune';

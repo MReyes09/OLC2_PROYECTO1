@@ -32,49 +32,49 @@ using IToken = Antlr4.Runtime.IToken;
 [System.CLSCompliant(false)]
 public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="gramaticaParser.program"/>.
+	/// Visit a parse tree produced by <see cref="gramaticaParser.inicio"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitProgram([NotNull] gramaticaParser.ProgramContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>ExprStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitExprStmt([NotNull] gramaticaParser.ExprStmtContext context);
+	Result VisitInicio([NotNull] gramaticaParser.InicioContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>PrintStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitPrintStmt([NotNull] gramaticaParser.PrintStmtContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>ExprStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitExprStmt([NotNull] gramaticaParser.ExprStmtContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>IfStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitIfStmt([NotNull] gramaticaParser.IfStmtContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>WhileStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitWhileStmt([NotNull] gramaticaParser.WhileStmtContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>AsignStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitAsignStmt([NotNull] gramaticaParser.AsignStmtContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>VarDeclStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
@@ -97,27 +97,6 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitVarAsign([NotNull] gramaticaParser.VarAsignContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Integer</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitInteger([NotNull] gramaticaParser.IntegerContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Not</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitNot([NotNull] gramaticaParser.NotContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Identifier</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitIdentifier([NotNull] gramaticaParser.IdentifierContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>MulDiv</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
@@ -147,6 +126,48 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitLogical([NotNull] gramaticaParser.LogicalContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>String</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitString([NotNull] gramaticaParser.StringContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Double</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDouble([NotNull] gramaticaParser.DoubleContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Integer</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitInteger([NotNull] gramaticaParser.IntegerContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Not</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNot([NotNull] gramaticaParser.NotContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Identifier</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIdentifier([NotNull] gramaticaParser.IdentifierContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Char</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitChar([NotNull] gramaticaParser.CharContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Compare</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
@@ -161,26 +182,12 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitNegate([NotNull] gramaticaParser.NegateContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>String</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitString([NotNull] gramaticaParser.StringContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Boolean</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitBoolean([NotNull] gramaticaParser.BooleanContext context);
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Double</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitDouble([NotNull] gramaticaParser.DoubleContext context);
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.type"/>.
 	/// </summary>

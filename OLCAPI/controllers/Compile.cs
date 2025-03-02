@@ -41,7 +41,7 @@ namespace api.Controllers
             var tokens = new CommonTokenStream(lexer);
             var parser = new gramaticaParser(tokens);
 
-            var tree = parser.program();
+            var tree = parser.inicio();
 
             var visitor = new CompilerVisitor();
             visitor.Visit(tree);

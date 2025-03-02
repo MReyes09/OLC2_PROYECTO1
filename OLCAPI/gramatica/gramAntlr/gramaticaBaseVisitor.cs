@@ -35,7 +35,7 @@ using ParserRuleContext = Antlr4.Runtime.ParserRuleContext;
 [System.CLSCompliant(false)]
 public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Result>, IgramaticaVisitor<Result> {
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="gramaticaParser.program"/>.
+	/// Visit a parse tree produced by <see cref="gramaticaParser.inicio"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -43,21 +43,10 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	public virtual Result VisitProgram([NotNull] gramaticaParser.ProgramContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>ExprStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitExprStmt([NotNull] gramaticaParser.ExprStmtContext context) { return VisitChildren(context); }
+	public virtual Result VisitInicio([NotNull] gramaticaParser.InicioContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>PrintStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -67,8 +56,19 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// <return>The visitor result.</return>
 	public virtual Result VisitPrintStmt([NotNull] gramaticaParser.PrintStmtContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by the <c>ExprStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitExprStmt([NotNull] gramaticaParser.ExprStmtContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>IfStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -79,7 +79,7 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	public virtual Result VisitIfStmt([NotNull] gramaticaParser.IfStmtContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>WhileStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -90,7 +90,7 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	public virtual Result VisitWhileStmt([NotNull] gramaticaParser.WhileStmtContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>AsignStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -101,7 +101,7 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	public virtual Result VisitAsignStmt([NotNull] gramaticaParser.AsignStmtContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>VarDeclStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.dcl"/>.
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// <para>
 	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
 	/// on <paramref name="context"/>.
@@ -140,39 +140,6 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitVarAsign([NotNull] gramaticaParser.VarAsignContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Integer</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitInteger([NotNull] gramaticaParser.IntegerContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Not</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitNot([NotNull] gramaticaParser.NotContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Identifier</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitIdentifier([NotNull] gramaticaParser.IdentifierContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by the <c>MulDiv</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
@@ -218,6 +185,72 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// <return>The visitor result.</return>
 	public virtual Result VisitLogical([NotNull] gramaticaParser.LogicalContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by the <c>String</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitString([NotNull] gramaticaParser.StringContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Double</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitDouble([NotNull] gramaticaParser.DoubleContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Integer</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitInteger([NotNull] gramaticaParser.IntegerContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Not</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitNot([NotNull] gramaticaParser.NotContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Identifier</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitIdentifier([NotNull] gramaticaParser.IdentifierContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Char</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitChar([NotNull] gramaticaParser.CharContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>Compare</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// <para>
@@ -240,17 +273,6 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// <return>The visitor result.</return>
 	public virtual Result VisitNegate([NotNull] gramaticaParser.NegateContext context) { return VisitChildren(context); }
 	/// <summary>
-	/// Visit a parse tree produced by the <c>String</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitString([NotNull] gramaticaParser.StringContext context) { return VisitChildren(context); }
-	/// <summary>
 	/// Visit a parse tree produced by the <c>Boolean</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// <para>
@@ -261,17 +283,6 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	public virtual Result VisitBoolean([NotNull] gramaticaParser.BooleanContext context) { return VisitChildren(context); }
-	/// <summary>
-	/// Visit a parse tree produced by the <c>Double</c>
-	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
-	/// <para>
-	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
-	/// on <paramref name="context"/>.
-	/// </para>
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	public virtual Result VisitDouble([NotNull] gramaticaParser.DoubleContext context) { return VisitChildren(context); }
 	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.type"/>.
 	/// <para>
