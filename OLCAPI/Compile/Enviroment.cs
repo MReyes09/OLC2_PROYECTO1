@@ -1,9 +1,10 @@
 public enum SymbolType
 {
-    Integer,
-    Double,
-    String,
-    Boolean 
+    INT,
+    FLOAT64,
+    STRING,
+    BOOL,
+    RUNE 
 }
 
 public class Symbol
@@ -11,10 +12,13 @@ public class Symbol
     public object Value { get; set; }
     public SymbolType Type { get; set; }
 
-    public Symbol(object value, SymbolType type)
+    public bool Mutable { get; set; }
+
+    public Symbol(object value, SymbolType type, bool mutable)
     {
         Value = value;
         Type = type;
+        Mutable = mutable;
     }
 }
 
@@ -45,15 +49,15 @@ public class Environment
         }
     }
 
-    public void SetVariable(string id, object value, SymbolType type)
+    public void SetVariable(string id, object value, SymbolType type, bool mutable)
     {
         if (Variables.ContainsKey(id))
         {
-            Variables[id] = new Symbol(value, type);
+            Variables[id] = new Symbol(value, type, mutable);
         }
         else
         {
-            Variables.Add(id, new Symbol(value, type));
+            Variables.Add(id, new Symbol(value, type, mutable));
         }
     }
 }

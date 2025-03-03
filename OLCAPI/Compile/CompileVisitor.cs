@@ -16,25 +16,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
-    // VisitVarDcl
-    public override object VisitVarDeclStmt(gramaticaParser.VarDeclStmtContext context)
-    {
-        var varDecl = context.varDcl();
-        string id = varDecl.ID_VARIABLE().GetText();
-        string typeText = varDecl.type().GetText();
-        SymbolType type = Enum.Parse<SymbolType>(typeText);
-        object value = Visit(varDecl.expr());
-
-        // Validación de tipo
-        if (!IsValidType(value, type))
-        {
-            throw new Exception($"Type mismatch: Cannot assign {value?.GetType().Name} to {type}");
-        }
-
-        currentEnvironment.SetVariable(id, value, type);
-        return null;
-    }
-
     // VisitExprStmt
     public override object VisitExprStmt(gramaticaParser.ExprStmtContext context)
     {
@@ -44,16 +25,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     // VisitPrintStmt
     public override object VisitPrintStmt(gramaticaParser.PrintStmtContext context)
     {
-        object value = Visit(context.expr());
+        var imprimir = context.imprimir();
+        object value = Visit(imprimir.expr());
         output += value + "\n";
         return null;
-    }
-
-    // VisitIdentifier
-    public override object VisitIdentifier(gramaticaParser.IdentifierContext context)
-    {
-        string id = context.ID_VARIABLE().GetText();
-        return currentEnvironment.GetVariable(id).Value;
     }
 
     // VisitParens
@@ -62,17 +37,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return Visit(context.expr());
     }
 
-    // VisitNegate
-    public override object VisitNegate(gramaticaParser.NegateContext context)
-    {
-        object value = Visit(context.expr());
-
-        if (value is int intValue) return -intValue;
-        if (value is double doubleValue) return -doubleValue;
-
-        throw new Exception("Negation can only be applied to numbers.");
-    }
-
+    // ----------------------------- TIPOS DE DATOS -----------------------------
     // VisitNumber
     public override object VisitInteger(gramaticaParser.IntegerContext context)
     {
@@ -93,17 +58,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
     public override object VisitChar([NotNull] gramaticaParser.CharContext context)
     {
-        return context.GetText().Trim('\'');
+        var charText = context.GetText().Trim('\'');
+        return charText[0];
     }
 
-    // VisitBoolean
-    public override object VisitBoolean(gramaticaParser.BooleanContext context)
-    {
-        return bool.Parse(context.GetText());
-    }
-
+    // ----------------------------- OPERADORES -----------------------------
     // VisitMulDiv
-    public override object VisitMulDiv(gramaticaParser.MulDivContext context)
+    public override object VisitMulDivModulo(gramaticaParser.MulDivModuloContext context)
     {
         dynamic left = Visit(context.expr(0));
         dynamic right = Visit(context.expr(1));
@@ -113,12 +74,23 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             return null;
         }
 
-        if( right == 0 && context.op.Text == "/"){
-            output += "Error al operar / no se puede dividir entre 0.\n";
+        if( right == 0 && context.op.Text == "/" || right == 0 && context.op.Text == "%"){
+            output += "Error al operar / | % no se puede dividir entre 0.\n";
             return null;
         }
 
-        return context.op.Text == "*" ? left * right : left / right;
+        if( context.op.Text == "%" && !(left is int && right is int)){
+            
+            output += "Error al operar % los tipos de datos no son operables.\n";
+            return null;
+        }
+
+        return context.op.Text switch
+        {
+            "*" => left * right,
+            "/" => left / right,
+            "%" => left % right
+        };
     }
 
     // VisitAddSub
@@ -138,26 +110,67 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
     }
 
-    // VisitCompare
-    public override object VisitCompare(gramaticaParser.CompareContext context)
+    // ----------------------------- OPERADORES LOGICOS -----------------------------
+    public override object VisitEqualsNotEquals(gramaticaParser.EqualsNotEqualsContext context)
     {
         dynamic left = Visit(context.expr(0));
         dynamic right = Visit(context.expr(1));
 
-        if (!(left is int || left is double) || !(right is int || right is double))
-            throw new Exception("Comparison operators can only be applied to numbers.");
+        // Verificar si los tipos son compatibles (iguales o int y double)
+        bool areComparable = left.GetType() == right.GetType() || 
+                            (left is int && right is double) || 
+                            (left is double && right is int);
 
-        return context.op.Text == "<" ? left < right : left > right;
+        // Si los tipos no son compatibles, retornamos el error
+        if (!areComparable){
+            output += "Error al operar ==|!= los tipos de datos no son operables.\n";
+            return false;
+        }
+
+        // Si los tipos son compatibles, hacemos la comparación
+        return context.op.Text == "==" ? left == right : left != right;
     }
 
-    // VisitLogical
+// VisitCompare
+    public override object VisitMinorMajorEqual(gramaticaParser.MinorMajorEqualContext context)
+    {
+        dynamic left = Visit(context.expr(0));
+        dynamic right = Visit(context.expr(1));
+
+        bool areComparable = (left is int && right is double) || 
+                            (left is double && right is int) ||
+                            (left is int && right is int) ||
+                            (left is double && right is double) ||
+                            (left is char && right is char);
+
+        if (!areComparable){
+            output += "Error al operar < | > | <= | >= los tipos de datos no son operables.\n";
+            return false;
+        }
+
+        // Comparar los caracteres como si fueran sus valores ASCII
+        if (left is char leftChar && right is char rightChar){
+            left = (int)leftChar;  // Convertir char a su valor ASCII
+            right = (int)rightChar; // Convertir char a su valor ASCII
+        }
+
+        return context.op.Text switch
+        {
+            "<" => left < right,
+            ">" => left > right,
+            "<=" => left <= right,
+            ">=" => left >= right
+        };
+    }
+
+    // VisitLogica
     public override object VisitLogical(gramaticaParser.LogicalContext context)
     {
         object left = Visit(context.expr(0));
         object right = Visit(context.expr(1));
 
         if (!(left is bool) || !(right is bool))
-            throw new Exception("Logical operators can only be applied to booleans.");
+            output += "Error al operar && | || los tipos de datos no son operables.\n";
 
         return context.op.Text == "&&" ? (bool)left && (bool)right : (bool)left || (bool)right;
     }
@@ -168,9 +181,144 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         object value = Visit(context.expr());
         if (value is bool boolValue) return !boolValue;
 
-        throw new Exception("Negation (!) can only be applied to booleans.");
+        output += "Error al operar ! los tipos de datos no son operables.\n";
+        return false;
     }
 
+    // VisitBoolean
+    public override object VisitBoolean(gramaticaParser.BooleanContext context)
+    {
+        return bool.Parse(context.GetText());
+    }
+
+    // VisitNegate
+    public override object VisitNegate(gramaticaParser.NegateContext context)
+    {
+        object value = Visit(context.expr());
+
+        if (value is int intValue) return -intValue;
+        if (value is double doubleValue) return -doubleValue;
+
+        throw new Exception("Negation can only be applied to numbers.");
+    }
+
+
+    // ----------------------------- VARIABLES -----------------------------
+    public override object VisitAsignStmt(gramaticaParser.AsignStmtContext context){
+        var varAsign = context.varAsign();
+        string id = varAsign.ID_VARIABLE().GetText();
+        object value = Visit(varAsign.expr());
+
+        SymbolType type = currentEnvironment.GetVariable(id).Type;
+        bool mutabilidad = currentEnvironment.GetVariable(id).Mutable;
+
+        if( !IsValidType(value, type)){
+            if( mutabilidad ){
+                currentEnvironment.SetVariable(id, value, type, mutabilidad);
+                return null;
+            }
+            output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
+            return null;
+        }
+
+        currentEnvironment.SetVariable(id, value, type, mutabilidad);
+
+        return null;
+    }
+
+    // VisitVarDcl
+    public override object VisitVarDeclStmt(gramaticaParser.VarDeclStmtContext context)
+    {
+        return Visit(context.varDcl());
+    }
+    
+    // 'var' ID_VARIABLE type '=' expr ';'
+    public override object VisitVarDclWithTypeAndValue(gramaticaParser.VarDclWithTypeAndValueContext context){
+        var id = context.ID_VARIABLE().GetText();
+        var type = context.type().GetText();
+        var value = Visit(context.expr());
+        SymbolType symbolType = Enum.Parse<SymbolType>(type, true);
+
+        // Si el valor es null, asignar 0 por defecto para evitar un NullReferenceException
+        if (value == null) {
+            value = 0; // O un valor predeterminado que consideres apropiado
+        }
+
+        // Si el valor es un int y el tipo es float64, convertirlo a double
+        if (value is int intValue && symbolType == SymbolType.FLOAT64) {
+            value = Convert.ToDouble(intValue);
+        }else{
+            var valid = IsValidType(value, symbolType);
+            if( valid == false){
+                output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
+                return null;
+            }
+        }
+
+        currentEnvironment.SetVariable(id, value, symbolType, false);
+        return null;
+    }
+
+    //  'var' ID_VARIABLE type ';'
+    public override object VisitVarDclWithTypeOnly(gramaticaParser.VarDclWithTypeOnlyContext context){
+        var id = context.ID_VARIABLE().GetText();
+        var type = context.type().GetText();
+        SymbolType symbolType = Enum.Parse<SymbolType>(type, true);
+        switch (symbolType)
+        {
+            case SymbolType.INT:
+                currentEnvironment.SetVariable(id, 0, symbolType, false);
+                break;
+            case SymbolType.FLOAT64:
+                currentEnvironment.SetVariable(id, 0.0, symbolType, false);
+                break;
+            case SymbolType.STRING:
+                currentEnvironment.SetVariable(id, "", symbolType, false);
+                break;
+            case SymbolType.BOOL:
+                currentEnvironment.SetVariable(id, false, symbolType, false);
+                break;
+            case SymbolType.RUNE:
+                currentEnvironment.SetVariable(id, '\0', symbolType, false);
+                break;
+        }
+        return null;
+    }
+
+    //'var' ID_VARIABLE ':=' expr ';'
+    public override object VisitVarDclWithInference(gramaticaParser.VarDclWithInferenceContext context)
+    {
+        var id = context.ID_VARIABLE().GetText();
+        var value = Visit(context.expr());
+
+        switch (value){
+            case int intValue:
+                currentEnvironment.SetVariable(id, intValue, SymbolType.INT,true);
+                break;
+            case double doubleValue:
+                currentEnvironment.SetVariable(id, doubleValue, SymbolType.FLOAT64,true);
+                break;
+            case string stringValue:
+                currentEnvironment.SetVariable(id, stringValue, SymbolType.STRING,true);
+                break;
+            case bool boolValue:
+                currentEnvironment.SetVariable(id, boolValue, SymbolType.BOOL,true);
+                break;
+            case char charValue:
+                currentEnvironment.SetVariable(id, charValue, SymbolType.RUNE,true);
+                break;
+        }
+        return null;
+    }
+
+    // VisitIdentifier
+    public override object VisitIdentifier(gramaticaParser.IdentifierContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        return currentEnvironment.GetVariable(id).Value;
+    }
+
+    //  ---------------------------------------------------- IF ----------------------------------------------------
     // VisitIfStmt
     public override object VisitIfStmt(gramaticaParser.IfStmtContext context)
     {
@@ -195,15 +343,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
-    public override object VisitAsignStmt(gramaticaParser.AsignStmtContext context){
-        var varAsign = context.varAsign();
-        string id = varAsign.ID_VARIABLE().GetText();
-        SymbolType type = Enum.Parse<SymbolType>("Integer");
-        object value = Visit(varAsign.expr());
-
-        currentEnvironment.SetVariable(id, value, type);
-        return null;
-    }
     //WHILE
     public override object VisitWhileStmt(gramaticaParser.WhileStmtContext context)
     {
@@ -224,10 +363,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     {
         return type switch
         {
-            SymbolType.Integer => value is int,
-            SymbolType.Double => value is double,
-            SymbolType.String => value is string,
-            SymbolType.Boolean => value is bool,
+            SymbolType.INT => value is int,
+            SymbolType.FLOAT64 => value is double,
+            SymbolType.STRING => value is string,
+            SymbolType.BOOL => value is bool,
+            SymbolType.RUNE => value is char,
             _ => false,
         };
     }

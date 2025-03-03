@@ -7,40 +7,63 @@ CHAR: '\'' . '\'';
 STRING: '"' .*? '"';
 BOOL: 'true' | 'false';
 BLANCOS: [ \t\r\n]+ -> skip;
-ID_VARIABLE: [a-zA-Z_]+;
+
+ID_VARIABLE: [a-zA-Z_0-9]+;
+
 COMENTARIOLINEA: '//' .*? '\n' -> skip;
 COMENTARIOMULTILINEA: '/*' .*? '*/' -> skip;
 
 
 // ----------------- PARSER -----------------
+
+// ----------------- Lista de instrucciones -----------------
 inicio: instrucciones*;
 
-instrucciones: 'fmt.println(' expr ')' ';' # PrintStmt
-    | expr ';' # ExprStmt 
+// ----------------- Instrucciones -----------------
+
+instrucciones: imprimir # PrintStmt
+    | expr # ExprStmt 
     | 'if (' expr ')' block ('else' block)? # IfStmt
 	| 'for (' expr ')' block # WhileStmt
 	| varAsign # AsignStmt
-	| varDcl #VarDeclStmt;
+	| varDcl #VarDeclStmt
+;
+
+// ----------------- Instruccion imprimir -----------------
+
+imprimir: 'fmt.Println(' expr ')';
 
 block: '{' instrucciones* '}';
 
-varDcl: 'var' ID_VARIABLE type '=' expr ';';
+// ----------------- Declaracion de variables -----------------
+varDcl: 'var' ID_VARIABLE type '=' expr # VarDclWithTypeAndValue
+      | 'var' ID_VARIABLE type          # VarDclWithTypeOnly
+      | ID_VARIABLE ':=' expr           # VarDclWithInference
+;    
 
-varAsign: ID_VARIABLE '=' expr ';' ;
+// ----------------- Asignacion de variables -----------------
+varAsign: ID_VARIABLE '=' expr 
+;
 
-expr:
-    '-' expr                  # Negate
-    | expr op = ('*' | '/') expr    # MulDiv
-    | expr op = ('+' | '-') expr    # AddSub
-    | expr op = ('<' | '>') expr    # Compare
-    | expr op = ('&&' | '||') expr  # Logical
-    | '!' expr                # Not
-    | INT                     # Integer
-    | DOUBLE                  # Double
-    | STRING                  # String
-    | BOOL                    # Boolean
-    | ID_VARIABLE             # Identifier
-    | CHAR                    # Char
-    | '(' expr ')'            # Parens;
+expr: '-' expr                                                # Negate
+    | '!' expr                                              # Not
+    | expr op = ('*' | '/' | '%') expr                      # MulDivModulo
+    | expr op = ('+' | '-') expr                            # AddSub
+    | expr op = ('<' | '>' | '<=' | '>=') expr              # MinorMajorEqual
+    | expr op = ('==' | '!=') expr                          # EqualsNotEquals
+    | expr op = ('&&' | '||') expr                          # Logical
+    | INT                                                   # Integer
+    | DOUBLE                                                # Double
+    | STRING                                                # String
+    | BOOL                                                  # Boolean
+    | ID_VARIABLE                                           # Identifier
+    | CHAR                                                  # Char
+    | '(' expr ')'                                          # Parens
+;
 
-type: 'int' | 'float64' | 'string' | 'bool' | 'rune';
+type: 'int' 
+    | 'float64' 
+    | 'string' 
+    | 'bool' 
+    | 'rune'
+;
