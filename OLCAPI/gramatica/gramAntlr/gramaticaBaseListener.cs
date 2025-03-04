@@ -144,6 +144,34 @@ public partial class gramaticaBaseListener : IgramaticaListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitImprimir([NotNull] gramaticaParser.ImprimirContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>IfOnly</c>
+	/// labeled alternative in <see cref="gramaticaParser.sIf"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterIfOnly([NotNull] gramaticaParser.IfOnlyContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IfOnly</c>
+	/// labeled alternative in <see cref="gramaticaParser.sIf"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitIfOnly([NotNull] gramaticaParser.IfOnlyContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>IfAnidado</c>
+	/// labeled alternative in <see cref="gramaticaParser.sIf"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterIfAnidado([NotNull] gramaticaParser.IfAnidadoContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IfAnidado</c>
+	/// labeled alternative in <see cref="gramaticaParser.sIf"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitIfAnidado([NotNull] gramaticaParser.IfAnidadoContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="gramaticaParser.block"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

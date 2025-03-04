@@ -322,22 +322,52 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     // VisitIfStmt
     public override object VisitIfStmt(gramaticaParser.IfStmtContext context)
     {
+        return Visit(context.sIf());
+    }
+
+    // -------------------- Produccion IF ELSE ?--------------------
+    public override object VisitIfOnly(gramaticaParser.IfOnlyContext context)
+    {
         object condition = Visit(context.expr());
 
-        if (condition is not bool)
-            throw new Exception("If statement condition must be a boolean.");
+        if (condition is not bool){
+            output += "Error al evaluar la condición del if, no es un booleano.\n";
+            return null;
+        }
 
-        if ((bool)condition)
-        {
+        if ((bool)condition){
             Environment new_environment = new Environment(currentEnvironment);
 
             currentEnvironment = new_environment;
             Visit(context.block(0)); // Ejecutar el bloque del 'if'
             currentEnvironment = new_environment.Parent;
-        }
-        else if (context.block().Length > 1)
-        {
+
+        } else if (context.block().Length > 1){
             Visit(context.block(1)); // Ejecutar el bloque del 'else' si existe
+        }
+
+        return null;
+    }
+
+    // -------------------- Produccion IF ELSE IF ?--------------------
+    public override object VisitIfAnidado(gramaticaParser.IfAnidadoContext context)
+    {
+        object condition = Visit(context.expr());
+
+        if (condition is not bool){
+            output += "Error al evaluar la condición del if, no es un booleano.\n";
+            return null;
+        }
+
+        if ((bool)condition){
+            Environment new_environment = new Environment(currentEnvironment);
+
+            currentEnvironment = new_environment;
+            Visit(context.block()); // Ejecutar el bloque del 'if'
+            currentEnvironment = new_environment.Parent;
+
+        }else{
+            Visit(context.sIf()); // Ejecutar el bloque del 'else if'
         }
 
         return null;

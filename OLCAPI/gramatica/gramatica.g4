@@ -23,7 +23,7 @@ inicio: instrucciones*;
 
 instrucciones: imprimir # PrintStmt
     | expr # ExprStmt 
-    | 'if (' expr ')' block ('else' block)? # IfStmt
+    | sIf # IfStmt
 	| 'for (' expr ')' block # WhileStmt
 	| varAsign # AsignStmt
 	| varDcl #VarDeclStmt
@@ -32,6 +32,10 @@ instrucciones: imprimir # PrintStmt
 // ----------------- Instruccion imprimir -----------------
 
 imprimir: 'fmt.Println(' expr ')';
+
+sIf: 'if' expr block ('else' block)?    # IfOnly
+    | 'if' expr block 'else' sIf     # IfAnidado
+;
 
 block: '{' instrucciones* '}';
 

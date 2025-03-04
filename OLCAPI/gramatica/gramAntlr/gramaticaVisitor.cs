@@ -86,6 +86,20 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitImprimir([NotNull] gramaticaParser.ImprimirContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>IfOnly</c>
+	/// labeled alternative in <see cref="gramaticaParser.sIf"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIfOnly([NotNull] gramaticaParser.IfOnlyContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>IfAnidado</c>
+	/// labeled alternative in <see cref="gramaticaParser.sIf"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIfAnidado([NotNull] gramaticaParser.IfAnidadoContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.block"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
