@@ -4,6 +4,7 @@ using Antlr4.Runtime.Misc;
 public class CompilerVisitor : gramaticaBaseVisitor<object>
 {
     public string output = "";
+    private object conditionExpr;
     private Environment currentEnvironment = new Environment();
 
     // VisitProgram
@@ -26,7 +27,17 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public override object VisitPrintStmt(gramaticaParser.PrintStmtContext context)
     {
         var imprimir = context.imprimir();
-        object value = Visit(imprimir.expr());
+        object value;
+        if( imprimir.expr().Length > 1){
+            for(int i = 0; i < imprimir.expr().Length; i++){
+                value = Visit(imprimir.expr(i));
+                output += " " + value.ToString();
+            }
+            output += "\n";
+            return null;
+        }else{
+            value = Visit(imprimir.expr(0));
+        }
         output += value + "\n";
         return null;
     }
@@ -35,6 +46,20 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public override object VisitParens(gramaticaParser.ParensContext context)
     {
         return Visit(context.expr());
+    }
+
+    public override object VisitSeccionInstruccion(gramaticaParser.SeccionInstruccionContext context)
+    {
+        Environment new_environment = new Environment(currentEnvironment);
+        currentEnvironment = new_environment;
+
+        foreach (var instrucciones in context.instrucciones())
+        {
+            Visit(instrucciones);
+        }
+
+        currentEnvironment = new_environment.Parent;
+        return null;
     }
 
     // ----------------------------- TIPOS DE DATOS -----------------------------
@@ -204,10 +229,15 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
 
     // ----------------------------- VARIABLES -----------------------------
+    // ----------------------------- ASIGNACIONES -----------------------------
     public override object VisitAsignStmt(gramaticaParser.AsignStmtContext context){
-        var varAsign = context.varAsign();
-        string id = varAsign.ID_VARIABLE().GetText();
-        object value = Visit(varAsign.expr());
+        return Visit(context.varAsign());
+    }
+    // 'ID_VARIABLE' '=' expr ';'
+    public override object VisitVarExpr(gramaticaParser.VarExprContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object value = Visit(context.expr());
 
         SymbolType type = currentEnvironment.GetVariable(id).Type;
         bool mutabilidad = currentEnvironment.GetVariable(id).Mutable;
@@ -226,6 +256,96 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
+    // 'ID_VARIABLE' '+= | -=' expr ';'
+    public override object VisitVarAdd(gramaticaParser.VarAddContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object value = Visit(context.expr());
+
+        SymbolType type = currentEnvironment.GetVariable(id).Type;
+
+        if( value is int && type == SymbolType.FLOAT64){            
+            switch(context.op.Text){
+                case "+=":
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                    break;
+                case "-=":
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                    break;
+            }
+            return null;
+
+        }else if( IsValidType(value, type)){
+            if( type == SymbolType.STRING){
+                switch(context.op.Text){
+                    case "+=":
+                        currentEnvironment.SetVariable(id, (string)currentEnvironment.GetVariable(id).Value + (string)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        break;
+                    case "-=":
+                        output += "Error -=: El tipo de variable no acepta operador -=.\n";
+                        break;
+                }
+                return null;
+            }else if( type == SymbolType.INT){
+                switch(context.op.Text){
+                    case "+=":
+                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        break;
+                    case "-=":
+                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        break;
+                }
+                return null;
+            }else if( type == SymbolType.FLOAT64){
+                switch(context.op.Text){
+                    case "+=":
+                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (double)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        break;
+                    case "-=":
+                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (double)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        break;
+                }
+                return null;
+            }else{
+                output += "Error +=: El tipo de variable no acepta operador +=.\n";
+                return null;
+            }
+        }else{
+            output += "Error +=: Al asignar el valor a la variable, los tipos no son compatibles.\n";
+            return null;
+        }
+    }
+
+    public override object VisitVarInc(gramaticaParser.VarIncContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        SymbolType type = currentEnvironment.GetVariable(id).Type;
+
+        if( type != SymbolType.INT && type != SymbolType.FLOAT64){
+            output += "Error ++: El tipo de variable no acepta operador ++.\n";
+            return null;
+        }
+
+        switch(context.op.Text){
+            case "++":
+                if( type == SymbolType.INT){
+                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable);
+                }else{
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable);
+                }
+                break;
+            case "--":
+                if( type == SymbolType.INT){
+                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable);
+                }else{
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable);
+                }
+                break;
+        }
+
+        return null;
+    }
+    // ----------------------------- DECLARACIONES -----------------------------
     // VisitVarDcl
     public override object VisitVarDeclStmt(gramaticaParser.VarDeclStmtContext context)
     {
@@ -373,19 +493,109 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
-    //WHILE
-    public override object VisitWhileStmt(gramaticaParser.WhileStmtContext context)
-    {
-        // object condition = Visit(context.expr());
+    // ---------------------------------------------------- switch ----------------------------------------------------
 
-        // if (condition is not bool)
-        //     throw new Exception("If statement condition must be a boolean.");
+    // Produccion de instrucciones de switch
+    public override object VisitSwitchInstruccion(gramaticaParser.SwitchInstruccionContext context){
+        return Visit(context.sSwitch());
+    }
 
-        while((bool) Visit(context.expr())){
-            Visit(context.block());
+    // Produccion de switch
+    public override object VisitSwitchStmt(gramaticaParser.SwitchStmtContext context){
+        
+        conditionExpr = Visit(context.expr()); // Evaluar la condicion-tipo del switch
+        return Visit(context.cases());
+    }
+
+    // Produccion cases
+    public override object VisitCase(gramaticaParser.CaseContext context){
+        object caseCondition = Visit(context.expr());
+        if (isEqualType(caseCondition, conditionExpr)){
+            
+            if( caseCondition.Equals(conditionExpr)){
+                Environment new_environment = new Environment(currentEnvironment);
+                currentEnvironment = new_environment;
+
+                foreach ( var instrucciones in context.instrucciones()){
+                    Visit(instrucciones);
+                }
+
+                currentEnvironment = new_environment.Parent;
+                return null;
+            }
+        }else{
+            output += "Error al evaluar la condición del case, los tipos no son compatibles.\n";
+            return null;
         }
-        return null;
 
+        if( context.cases() != null){
+            Visit(context.cases());
+        }
+        
+        return null;
+    }
+
+    // Produccion default
+    public override object VisitDefault(gramaticaParser.DefaultContext context) {
+
+        Environment new_environment = new Environment(currentEnvironment);
+        currentEnvironment = new_environment;
+
+        foreach ( var instrucciones in context.instrucciones()){
+            Visit(instrucciones);
+        }
+
+        currentEnvironment = new_environment.Parent;
+
+        return null;
+    }
+
+    // ---------------------------------------------------- FOR ----------------------------------------------------
+    public override object VisitForStmt(gramaticaParser.ForStmtContext context)
+    {
+        return Visit(context.sFor());
+    }
+
+    // Produccion de for simple
+    public override object VisitForCondicion(gramaticaParser.ForCondicionContext context)
+    {
+        object condition = Visit(context.expr());
+
+        if( condition is not bool){
+            output += "Error al evaluar la condición del for, no es un booleano.\n";
+            return null;
+        }
+
+        while ((bool)condition){
+
+            Visit(context.block());
+            condition = Visit(context.expr());
+        }
+
+        return null;
+    }
+
+    // Produccion de for con declaracion
+    public override object VisitForAsignacion(gramaticaParser.ForAsignacionContext context)
+    {
+        Visit(context.varDcl());
+        object condition = Visit(context.expr());
+
+        if( condition is not bool){
+            output += "Error al evaluar la condición del for, no es un booleano.\n";
+            return null;
+        }
+
+        while ((bool)condition){
+
+            Visit(context.block()); // Ejecutar el bloque del 'for'
+            //Actualizo la variable
+            Visit(context.varAsign());
+            //Evaluar la condicion
+            condition = Visit(context.expr());
+        }
+
+        return null;
     }
 
     // Validar tipos
@@ -399,6 +609,17 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             SymbolType.BOOL => value is bool,
             SymbolType.RUNE => value is char,
             _ => false,
+        };
+    }
+
+    private bool isEqualType(object value1, object value2){
+        return value1 switch{
+            int => value2 is int,
+            double => value2 is double,
+            string => value2 is string,
+            bool => value2 is bool,
+            char => value2 is char,
+            _ => false
         };
     }
 }

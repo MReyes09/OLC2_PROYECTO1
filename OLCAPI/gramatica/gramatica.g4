@@ -21,23 +21,43 @@ inicio: instrucciones*;
 
 // ----------------- Instrucciones -----------------
 
-instrucciones: imprimir # PrintStmt
-    | expr # ExprStmt 
-    | sIf # IfStmt
-	| 'for (' expr ')' block # WhileStmt
-	| varAsign # AsignStmt
-	| varDcl #VarDeclStmt
+instrucciones: imprimir         # PrintStmt
+    | expr                      # ExprStmt 
+    | sIf                       # IfStmt
+    | sSwitch                   # SwitchInstruccion
+    | '{' instrucciones* '}'    # SeccionInstruccion
+	| sFor                      # ForStmt
+	| varAsign                  # AsignStmt
+	| varDcl                    # VarDeclStmt
 ;
 
 // ----------------- Instruccion imprimir -----------------
 
-imprimir: 'fmt.Println(' expr ')';
+imprimir: 'fmt.Println(' expr (',' expr)*')'
+;
+
+// ----------------- Sentencias de control -----------------
 
 sIf: 'if' expr block ('else' block)?    # IfOnly
     | 'if' expr block 'else' sIf     # IfAnidado
 ;
 
-block: '{' instrucciones* '}';
+sSwitch: 'switch' expr '{' cases '}' # SwitchStmt
+;
+
+cases: 'case' expr ':' instrucciones* cases? # Case
+    |'default:' instrucciones*               # Default
+;
+
+// ----------------- Bloque de instrucciones -----------------
+
+block: '{' instrucciones* '}'
+;
+
+// ----------------- Sentencia For -----------------
+sFor: 'for' expr block                              # ForCondicion
+    | 'for' varDcl ';' expr ';' varAsign block      # ForAsignacion
+;
 
 // ----------------- Declaracion de variables -----------------
 varDcl: 'var' ID_VARIABLE type '=' expr # VarDclWithTypeAndValue
@@ -46,7 +66,9 @@ varDcl: 'var' ID_VARIABLE type '=' expr # VarDclWithTypeAndValue
 ;    
 
 // ----------------- Asignacion de variables -----------------
-varAsign: ID_VARIABLE '=' expr 
+varAsign: ID_VARIABLE '=' expr          # varExpr
+    | ID_VARIABLE op =('+='|'-=') expr  # varAdd
+    | ID_VARIABLE op = ('++'|'--')      # varInc
 ;
 
 expr: '-' expr                                                # Negate
