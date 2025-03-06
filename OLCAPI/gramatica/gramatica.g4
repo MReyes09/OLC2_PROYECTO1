@@ -4,7 +4,7 @@ grammar gramatica;
 INT: [0-9]+;
 DOUBLE: [0-9]+ '.' [0-9]+;
 CHAR: '\'' . '\'';
-STRING: '"' .*? '"';
+STRING: '"' ( '\\' . | ~["\\] )* '"';
 BOOL: 'true' | 'false';
 BLANCOS: [ \t\r\n]+ -> skip;
 
@@ -27,6 +27,7 @@ instrucciones: imprimir         # PrintStmt
     | sSwitch                   # SwitchInstruccion
     | '{' instrucciones* '}'    # SeccionInstruccion
 	| sFor                      # ForStmt
+    | varDclSlice               # VarDeclSliceStmt
 	| varAsign                  # AsignStmt
 	| varDcl                    # VarDeclStmt
 ;
@@ -65,10 +66,19 @@ varDcl: 'var' ID_VARIABLE type '=' expr # VarDclWithTypeAndValue
       | ID_VARIABLE ':=' expr           # VarDclWithInference
 ;    
 
+varDclSlice: ID_VARIABLE assign '[]' type '{' (expr (',' expr)*)? '}' # SliceValores
+    | 'var' ID_VARIABLE '[]' type                                  # SliceVacio
+;
+
+assign: ':=' 
+    | '='
+;
+
 // ----------------- Asignacion de variables -----------------
 varAsign: ID_VARIABLE '=' expr          # varExpr
     | ID_VARIABLE op =('+='|'-=') expr  # varAdd
     | ID_VARIABLE op = ('++'|'--')      # varInc
+    | ID_VARIABLE '[' expr ']' '=' expr # ArrayAccess
 ;
 
 expr: '-' expr                                                # Negate
@@ -85,6 +95,12 @@ expr: '-' expr                                                # Negate
     | ID_VARIABLE                                           # Identifier
     | CHAR                                                  # Char
     | '(' expr ')'                                          # Parens
+    //Acceso a arreglos
+    | ID_VARIABLE '[' expr ']'                              # ArrayAccessSimple
+    | 'slices.Index('ID_VARIABLE ',' expr ')'               # ArrayFindIndex
+    | 'strings.Join('ID_VARIABLE ',' expr ')'               # ArrayJoin
+    | 'len('ID_VARIABLE ')'                                 # ArrayLength
+    | 'append('ID_VARIABLE ',' expr ')'                     # ArrayAppend
 ;
 
 type: 'int' 

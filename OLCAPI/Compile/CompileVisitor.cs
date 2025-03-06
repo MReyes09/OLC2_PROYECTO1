@@ -31,11 +31,23 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         if( imprimir.expr().Length > 1){
             for(int i = 0; i < imprimir.expr().Length; i++){
                 value = Visit(imprimir.expr(i));
+
+                if (value is List<object> list){
+                    output += " [ " + string.Join(", ", list) + " ]";
+                    continue;
+                }
+
                 output += " " + value.ToString();
             }
             output += "\n";
             return null;
         }else{
+            value = Visit(imprimir.expr(0));
+            if (value is List<object> list){
+                output += " [ " + string.Join(", ", list) + " ]";
+                return null;
+            }
+
             value = Visit(imprimir.expr(0));
         }
         output += value + "\n";
@@ -78,7 +90,22 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     // VisitString
     public override object VisitString(gramaticaParser.StringContext context)
     {
-        return context.GetText().Trim('"');
+         string text = context.GetText();
+
+        // Asegurar que la cadena comienza y termina con comillas
+        if (text.StartsWith("\"") && text.EndsWith("\""))
+        {
+            text = text.Substring(1, text.Length - 2); // Elimina las comillas exteriores
+        }
+
+        // Reemplazar secuencias de escape (\n, \t, \", etc.)
+        text = text.Replace("\\n", "\n")
+                .Replace("\\t", "\t")
+                .Replace("\\r", "\r")
+                .Replace("\\\"", "\"")
+                .Replace("\\\\", "\\"); // Doble barra invertida para evitar conflictos
+
+        return text;
     }
 
     public override object VisitChar([NotNull] gramaticaParser.CharContext context)
@@ -227,6 +254,117 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         throw new Exception("Negation can only be applied to numbers.");
     }
 
+    // ----------------------------- Acceso a arreglos -----------------------------
+    public override object VisitArrayAccess(gramaticaParser.ArrayAccessContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object index = Visit(context.expr(0));
+        object value = Visit(context.expr(1));
+
+        if (!ValidateArrayAccess(id, index, out List<object> list))
+        {
+            return null;
+        }
+
+        Symbol variable = currentEnvironment.GetVariable(id);
+        SymbolType tipoArray = variable.Type;
+
+        if (IsValidType(value, tipoArray))
+        {
+            list[(int)index] = value;
+        }
+        else
+        {
+            output += "Error al asignar valor en el arreglo, los tipos no son compatibles.\n";
+        }
+
+        return null;
+    }
+
+    public override object VisitArrayAccessSimple(gramaticaParser.ArrayAccessSimpleContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object index = Visit(context.expr());
+
+        if (!ValidateArrayAccess(id, index, out List<object> list))
+        {
+            return null;
+        }
+
+        return list[(int)index];
+    }
+
+    public override object VisitArrayFindIndex(gramaticaParser.ArrayFindIndexContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object value = Visit(context.expr());
+        Symbol variable = currentEnvironment.GetVariable(id);
+
+        if (variable == null || variable.Value is not List<object> tempList)
+        {
+            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
+            return null;
+        }
+
+        int valReturn = tempList.IndexOf(value);
+
+        return valReturn;
+    }
+
+    public override object VisitArrayJoin(gramaticaParser.ArrayJoinContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object value = Visit(context.expr());
+        Symbol variable = currentEnvironment.GetVariable(id);
+
+        if (variable == null || variable.Value is not List<object> tempList)
+        {
+            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
+            return null;
+        }else if(value is not string){
+            output += "Error al unir el arreglo, el valor no es un string.\n";
+            return null;
+        }else{
+            var valueResult = string.Join((string)value, tempList);
+            return valueResult;
+        }
+    }
+
+    public override object VisitArrayLength(gramaticaParser.ArrayLengthContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        Symbol variable = currentEnvironment.GetVariable(id);
+
+        if (variable == null || variable.Value is not List<object> tempList)
+        {
+            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
+            return null;
+        }
+
+        return tempList.Count;
+    }
+
+    public override object VisitArrayAppend(gramaticaParser.ArrayAppendContext context)
+    {
+        string id = context.ID_VARIABLE().GetText();
+        object value = Visit(context.expr());
+        Symbol variable = currentEnvironment.GetVariable(id);
+
+        if (variable == null || variable.Value is not List<object> tempList){
+            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
+            return null;
+        }
+
+        if (IsValidType(value, variable.Type)){
+            List<object> nuevaLista = tempList.ToList(); // Copia la lista
+            nuevaLista.Add(value); // Modifica la copia
+            return nuevaLista; // Retorna la copia con el nuevo valor
+        }else{
+            output += "Error al agregar valor al arreglo, los tipos no son compatibles.\n";
+        }
+
+        return null;
+    }
 
     // ----------------------------- VARIABLES -----------------------------
     // ----------------------------- ASIGNACIONES -----------------------------
@@ -242,16 +380,31 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         SymbolType type = currentEnvironment.GetVariable(id).Type;
         bool mutabilidad = currentEnvironment.GetVariable(id).Mutable;
 
+        if( value is null){
+            output += "Error al asignar el valor a la variable, el valor es nulo.\n";
+            return null;
+        }
+
+        if( value is List<Object> tempList ){
+            if( IsValidType(tempList[0], type) ){
+                currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
+                return null;
+            }else{
+                output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
+                return null;
+            }
+        }
+
         if( !IsValidType(value, type)){
             if( mutabilidad ){
-                currentEnvironment.SetVariable(id, value, type, mutabilidad);
+                currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
                 return null;
             }
             output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
             return null;
         }
 
-        currentEnvironment.SetVariable(id, value, type, mutabilidad);
+        currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
 
         return null;
     }
@@ -267,10 +420,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         if( value is int && type == SymbolType.FLOAT64){            
             switch(context.op.Text){
                 case "+=":
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                     break;
                 case "-=":
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                     break;
             }
             return null;
@@ -279,7 +432,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             if( type == SymbolType.STRING){
                 switch(context.op.Text){
                     case "+=":
-                        currentEnvironment.SetVariable(id, (string)currentEnvironment.GetVariable(id).Value + (string)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        currentEnvironment.SetVariable(id, (string)currentEnvironment.GetVariable(id).Value + (string)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                         break;
                     case "-=":
                         output += "Error -=: El tipo de variable no acepta operador -=.\n";
@@ -289,20 +442,20 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }else if( type == SymbolType.INT){
                 switch(context.op.Text){
                     case "+=":
-                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                         break;
                     case "-=":
-                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                         break;
                 }
                 return null;
             }else if( type == SymbolType.FLOAT64){
                 switch(context.op.Text){
                     case "+=":
-                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (double)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (double)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                         break;
                     case "-=":
-                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (double)value, type, currentEnvironment.GetVariable(id).Mutable);
+                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (double)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                         break;
                 }
                 return null;
@@ -329,16 +482,16 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         switch(context.op.Text){
             case "++":
                 if( type == SymbolType.INT){
-                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable);
+                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable, false);
                 }else{
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable, false);
                 }
                 break;
             case "--":
                 if( type == SymbolType.INT){
-                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable);
+                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable, false);
                 }else{
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable, false);
                 }
                 break;
         }
@@ -375,7 +528,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
         }
 
-        currentEnvironment.SetVariable(id, value, symbolType, false);
+        currentEnvironment.SetVariable(id, value, symbolType, false, true);
         return null;
     }
 
@@ -387,19 +540,19 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         switch (symbolType)
         {
             case SymbolType.INT:
-                currentEnvironment.SetVariable(id, 0, symbolType, false);
+                currentEnvironment.SetVariable(id, 0, symbolType, false, true);
                 break;
             case SymbolType.FLOAT64:
-                currentEnvironment.SetVariable(id, 0.0, symbolType, false);
+                currentEnvironment.SetVariable(id, 0.0, symbolType, false, true);
                 break;
             case SymbolType.STRING:
-                currentEnvironment.SetVariable(id, "", symbolType, false);
+                currentEnvironment.SetVariable(id, "", symbolType, false, true);
                 break;
             case SymbolType.BOOL:
-                currentEnvironment.SetVariable(id, false, symbolType, false);
+                currentEnvironment.SetVariable(id, false, symbolType, false, true);
                 break;
             case SymbolType.RUNE:
-                currentEnvironment.SetVariable(id, '\0', symbolType, false);
+                currentEnvironment.SetVariable(id, '\0', symbolType, false, true);
                 break;
         }
         return null;
@@ -413,19 +566,19 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         switch (value){
             case int intValue:
-                currentEnvironment.SetVariable(id, intValue, SymbolType.INT,true);
+                currentEnvironment.SetVariable(id, intValue, SymbolType.INT,true, true);
                 break;
             case double doubleValue:
-                currentEnvironment.SetVariable(id, doubleValue, SymbolType.FLOAT64,true);
+                currentEnvironment.SetVariable(id, doubleValue, SymbolType.FLOAT64,true, true);
                 break;
             case string stringValue:
-                currentEnvironment.SetVariable(id, stringValue, SymbolType.STRING,true);
+                currentEnvironment.SetVariable(id, stringValue, SymbolType.STRING,true, true);
                 break;
             case bool boolValue:
-                currentEnvironment.SetVariable(id, boolValue, SymbolType.BOOL,true);
+                currentEnvironment.SetVariable(id, boolValue, SymbolType.BOOL,true, true);
                 break;
             case char charValue:
-                currentEnvironment.SetVariable(id, charValue, SymbolType.RUNE,true);
+                currentEnvironment.SetVariable(id, charValue, SymbolType.RUNE,true, true);
                 break;
         }
         return null;
@@ -438,6 +591,38 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return currentEnvironment.GetVariable(id).Value;
     }
 
+    // ----------------------------- DECLARACION SLICE -----------------------------
+    public override object VisitVarDeclSliceStmt(gramaticaParser.VarDeclSliceStmtContext context)
+    {
+        return Visit(context.varDclSlice());
+    }
+
+    public override object VisitSliceValores(gramaticaParser.SliceValoresContext context)
+    {
+        var id = context.ID_VARIABLE().GetText();
+        var type = context.type().GetText();
+        var values = new List<object>();
+
+        foreach (var expr in context.expr())
+        {
+            values.Add(Visit(expr));
+        }
+
+        SymbolType symbolType = Enum.Parse<SymbolType>(type, true);
+        currentEnvironment.SetVariable(id, values, symbolType, false, true);
+
+        return null;
+    }
+
+    public override object VisitSliceVacio(gramaticaParser.SliceVacioContext context)
+    {
+        var id = context.ID_VARIABLE().GetText();
+        var type = context.type().GetText();
+        SymbolType symbolType = Enum.Parse<SymbolType>(type, true);
+        currentEnvironment.SetVariable(id, new List<object>(), symbolType, false, true);
+
+        return null;
+    }
     //  ---------------------------------------------------- IF ----------------------------------------------------
     // VisitIfStmt
     public override object VisitIfStmt(gramaticaParser.IfStmtContext context)
@@ -622,4 +807,32 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             _ => false
         };
     }
+
+    private bool ValidateArrayAccess(string id, object index, out List<object> list)
+    {
+        list = null;
+        Symbol variable = currentEnvironment.GetVariable(id);
+
+        if (variable == null || variable.Value is not List<object> tempList)
+        {
+            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
+            return false;
+        }
+
+        if (index is not int intIndex)
+        {
+            output += "Error al acceder al arreglo, el índice no es un entero.\n";
+            return false;
+        }
+
+        if (intIndex < 0 || intIndex >= tempList.Count)
+        {
+            output += "Error al acceder al arreglo, el índice está fuera de rango.\n";
+            return false;
+        }
+
+        list = tempList;
+        return true;
+    }
+
 }
