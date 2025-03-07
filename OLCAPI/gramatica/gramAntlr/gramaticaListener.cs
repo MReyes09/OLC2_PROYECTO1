@@ -323,6 +323,40 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitAssign([NotNull] gramaticaParser.AssignContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="gramaticaParser.nuevoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterNuevoSlice([NotNull] gramaticaParser.NuevoSliceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="gramaticaParser.nuevoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitNuevoSlice([NotNull] gramaticaParser.NuevoSliceContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>SliceContenido</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSliceContenido([NotNull] gramaticaParser.SliceContenidoContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>SliceContenido</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSliceContenido([NotNull] gramaticaParser.SliceContenidoContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>SliceContenidoSlice</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>SliceContenidoSlice</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>varExpr</c>
 	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
 	/// </summary>

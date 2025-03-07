@@ -378,6 +378,46 @@ public partial class gramaticaBaseListener : IgramaticaListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitAssign([NotNull] gramaticaParser.AssignContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="gramaticaParser.nuevoSlice"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterNuevoSlice([NotNull] gramaticaParser.NuevoSliceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="gramaticaParser.nuevoSlice"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitNuevoSlice([NotNull] gramaticaParser.NuevoSliceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>SliceContenido</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterSliceContenido([NotNull] gramaticaParser.SliceContenidoContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>SliceContenido</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitSliceContenido([NotNull] gramaticaParser.SliceContenidoContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>SliceContenidoSlice</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>SliceContenidoSlice</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by the <c>varExpr</c>
 	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
 	/// <para>The default implementation does nothing.</para>

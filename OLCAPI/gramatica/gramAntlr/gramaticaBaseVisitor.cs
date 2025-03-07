@@ -306,6 +306,38 @@ public partial class gramaticaBaseVisitor<Result> : AbstractParseTreeVisitor<Res
 	/// <return>The visitor result.</return>
 	public virtual Result VisitAssign([NotNull] gramaticaParser.AssignContext context) { return VisitChildren(context); }
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.nuevoSlice"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitNuevoSlice([NotNull] gramaticaParser.NuevoSliceContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>SliceContenido</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitSliceContenido([NotNull] gramaticaParser.SliceContenidoContext context) { return VisitChildren(context); }
+	/// <summary>
+	/// Visit a parse tree produced by the <c>SliceContenidoSlice</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// <para>
+	/// The default implementation returns the result of calling <see cref="AbstractParseTreeVisitor{Result}.VisitChildren(IRuleNode)"/>
+	/// on <paramref name="context"/>.
+	/// </para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	public virtual Result VisitSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context) { return VisitChildren(context); }
+	/// <summary>
 	/// Visit a parse tree produced by the <c>varExpr</c>
 	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
 	/// <para>

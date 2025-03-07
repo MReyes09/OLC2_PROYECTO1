@@ -64,21 +64,28 @@ sFor: 'for' expr block                              # ForCondicion
 varDcl: 'var' ID_VARIABLE type '=' expr # VarDclWithTypeAndValue
       | 'var' ID_VARIABLE type          # VarDclWithTypeOnly
       | ID_VARIABLE ':=' expr           # VarDclWithInference
-;    
+;
 
-varDclSlice: ID_VARIABLE assign '[]' type '{' (expr (',' expr)*)? '}' # SliceValores
-    | 'var' ID_VARIABLE '[]' type                                  # SliceVacio
+varDclSlice: ID_VARIABLE assign (nuevoSlice)+ type '{' contenidoSlice '}' # SliceValores
+    | 'var' ID_VARIABLE (nuevoSlice)+ type                                  # SliceVacio
 ;
 
 assign: ':=' 
     | '='
 ;
 
+nuevoSlice: '[]'
+;
+
+contenidoSlice: expr (',' expr)*                                # SliceContenido
+    | '{' contenidoSlice '}' (',' ('{' contenidoSlice '}')?)*      # SliceContenidoSlice
+;
+
 // ----------------- Asignacion de variables -----------------
 varAsign: ID_VARIABLE '=' expr          # varExpr
-    | ID_VARIABLE op =('+='|'-=') expr  # varAdd
+    | ID_VARIABLE op =('+='|'-=') expr  # varAdd    
     | ID_VARIABLE op = ('++'|'--')      # varInc
-    | ID_VARIABLE '[' expr ']' '=' expr # ArrayAccess
+    | ID_VARIABLE ('[' expr ']')+ '=' expr # ArrayAccess
 ;
 
 expr: '-' expr                                                # Negate
@@ -96,7 +103,7 @@ expr: '-' expr                                                # Negate
     | CHAR                                                  # Char
     | '(' expr ')'                                          # Parens
     //Acceso a arreglos
-    | ID_VARIABLE '[' expr ']'                              # ArrayAccessSimple
+    | ID_VARIABLE ('[' expr ']')+                           # ArrayAccessSimple
     | 'slices.Index('ID_VARIABLE ',' expr ')'               # ArrayFindIndex
     | 'strings.Join('ID_VARIABLE ',' expr ')'               # ArrayJoin
     | 'len('ID_VARIABLE ')'                                 # ArrayLength

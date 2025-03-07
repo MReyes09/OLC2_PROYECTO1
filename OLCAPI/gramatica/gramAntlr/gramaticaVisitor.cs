@@ -203,6 +203,26 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitAssign([NotNull] gramaticaParser.AssignContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.nuevoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitNuevoSlice([NotNull] gramaticaParser.NuevoSliceContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>SliceContenido</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSliceContenido([NotNull] gramaticaParser.SliceContenidoContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>SliceContenidoSlice</c>
+	/// labeled alternative in <see cref="gramaticaParser.contenidoSlice"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>varExpr</c>
 	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
 	/// </summary>

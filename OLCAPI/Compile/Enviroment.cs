@@ -60,7 +60,7 @@ public class Environment
         }else if( !Variables.ContainsKey(id) && declaracion ){
              // Si es una declaración y no existe en este entorno, agregarla
             if (value is List<object>){ // Manejo de slices (listas dinámicas){
-                Variables.Add(id, new Symbol(new List<object>((IEnumerable<object>)value), type, mutable));
+                Variables.Add(id, new Symbol((List<object>)value, type, mutable));
             }else{
                 Variables.Add(id, new Symbol(value, type, mutable));
             }   
