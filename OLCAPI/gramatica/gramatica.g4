@@ -30,6 +30,8 @@ instrucciones: imprimir         # PrintStmt
     | varDclSlice               # VarDeclSliceStmt
 	| varAsign                  # AsignStmt
 	| varDcl                    # VarDeclStmt
+    | varDclStruct              # VarDeclStructStmt
+    | varStructDcl              # VarStructDclStmt
 ;
 
 // ----------------- Instruccion imprimir -----------------
@@ -80,6 +82,12 @@ nuevoSlice: '[]'
 contenidoSlice: expr (',' expr)*                                # SliceContenido
     | '{' contenidoSlice '}' (',' ('{' contenidoSlice '}')?)*      # SliceContenidoSlice
 ;
+// ----------------- Declaracion de estructuras -----------------
+varDclStruct: 'struct' ID_VARIABLE '{'( type ID_VARIABLE ';')+'}'   # DeclStructData
+;
+
+varStructDcl: ID_VARIABLE ID_VARIABLE '=' '{' ID_VARIABLE ':' expr (',' ID_VARIABLE ':' expr)+ '}' ';'  # StructVarType
+;
 
 // ----------------- Asignacion de variables -----------------
 varAsign: ID_VARIABLE '=' expr          # varExpr
@@ -115,4 +123,5 @@ type: 'int'
     | 'string' 
     | 'bool' 
     | 'rune'
+    | 'struct'
 ;

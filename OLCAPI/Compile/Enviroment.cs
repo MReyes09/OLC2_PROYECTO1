@@ -5,7 +5,8 @@ public enum SymbolType
     STRING,
     BOOL,
     RUNE,
-    SLICE
+    SLICE,
+    STRUCT
 }
 
 public class Symbol

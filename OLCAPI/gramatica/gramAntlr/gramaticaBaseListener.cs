@@ -174,6 +174,34 @@ public partial class gramaticaBaseListener : IgramaticaListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitVarDeclStmt([NotNull] gramaticaParser.VarDeclStmtContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by the <c>VarDeclStructStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterVarDeclStructStmt([NotNull] gramaticaParser.VarDeclStructStmtContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>VarDeclStructStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitVarDeclStructStmt([NotNull] gramaticaParser.VarDeclStructStmtContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>VarStructDclStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterVarStructDclStmt([NotNull] gramaticaParser.VarStructDclStmtContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>VarStructDclStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitVarStructDclStmt([NotNull] gramaticaParser.VarStructDclStmtContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="gramaticaParser.imprimir"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
@@ -417,6 +445,34 @@ public partial class gramaticaBaseListener : IgramaticaListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>DeclStructData</c>
+	/// labeled alternative in <see cref="gramaticaParser.varDclStruct"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterDeclStructData([NotNull] gramaticaParser.DeclStructDataContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>DeclStructData</c>
+	/// labeled alternative in <see cref="gramaticaParser.varDclStruct"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitDeclStructData([NotNull] gramaticaParser.DeclStructDataContext context) { }
+	/// <summary>
+	/// Enter a parse tree produced by the <c>StructVarType</c>
+	/// labeled alternative in <see cref="gramaticaParser.varStructDcl"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterStructVarType([NotNull] gramaticaParser.StructVarTypeContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by the <c>StructVarType</c>
+	/// labeled alternative in <see cref="gramaticaParser.varStructDcl"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitStructVarType([NotNull] gramaticaParser.StructVarTypeContext context) { }
 	/// <summary>
 	/// Enter a parse tree produced by the <c>varExpr</c>
 	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.

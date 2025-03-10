@@ -101,6 +101,20 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitVarDeclStmt([NotNull] gramaticaParser.VarDeclStmtContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>VarDeclStructStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitVarDeclStructStmt([NotNull] gramaticaParser.VarDeclStructStmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>VarStructDclStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitVarStructDclStmt([NotNull] gramaticaParser.VarStructDclStmtContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.imprimir"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -222,6 +236,20 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitSliceContenidoSlice([NotNull] gramaticaParser.SliceContenidoSliceContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>DeclStructData</c>
+	/// labeled alternative in <see cref="gramaticaParser.varDclStruct"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitDeclStructData([NotNull] gramaticaParser.DeclStructDataContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>StructVarType</c>
+	/// labeled alternative in <see cref="gramaticaParser.varStructDcl"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStructVarType([NotNull] gramaticaParser.StructVarTypeContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>varExpr</c>
 	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.

@@ -709,6 +709,111 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         return arrayTemp;
     }
+    
+    // ----------------------------- Declaracion de Struct -----------------------------
+    public override object VisitVarDeclStructStmt(gramaticaParser.VarDeclStructStmtContext context)
+    {
+        return Visit(context.varDclStruct());
+    }
+
+    public override object VisitDeclStructData(gramaticaParser.DeclStructDataContext context)
+    {
+        bool firstTime = true;
+        int tipoVar = 0;
+        string id = "";
+
+        Dictionary<string, Symbol> VariableStruct = new Dictionary<string, Symbol>();
+
+        foreach (var variable in context.ID_VARIABLE())
+        {
+            if( firstTime )
+            {
+                firstTime = false;
+                id = variable.GetText();
+                continue;
+            }
+            else
+            {
+                SymbolType symbolType = Enum.Parse<SymbolType>(context.type()[tipoVar].GetText(), true);
+                switch( symbolType )
+                {
+                    case SymbolType.INT:
+                        VariableStruct.Add(variable.GetText(), new Symbol(0, symbolType, false));
+                        break;
+                    case SymbolType.FLOAT64:
+                        VariableStruct.Add(variable.GetText(), new Symbol(0.0, symbolType, false));
+                        break;
+                    case SymbolType.STRING:
+                        VariableStruct.Add(variable.GetText(), new Symbol("", symbolType, false));
+                        break;
+                    case SymbolType.BOOL:
+                        VariableStruct.Add(variable.GetText(), new Symbol(false, symbolType, false));
+                        break;
+                    case SymbolType.RUNE:
+                        VariableStruct.Add(variable.GetText(), new Symbol('\0', symbolType, false));
+                        break;
+                    //case SymbolType.Struct: falta caso struct
+                    //default: Error de tipo en struct
+                }
+                tipoVar++;
+            }
+        }
+        currentEnvironment.SetVariable(id, VariableStruct, SymbolType.STRUCT, false, true);
+        return null;
+    }
+
+    // ----------------------------- Declaracion de una variable de tipo Struct -----------------------------
+    public override object VisitVarStructDclStmt(gramaticaParser.VarStructDclStmtContext context)
+    {
+        return Visit(context.varStructDcl());
+    }
+
+    public override object VisitStructVarType(gramaticaParser.StructVarTypeContext context)
+    {
+        var idStruct = context.ID_VARIABLE(0).GetText();
+        Symbol baseStruct = currentEnvironment.GetVariable(idStruct);
+        if( baseStruct != null ){
+            //Console.WriteLine("Existe el struct\n");
+        }
+        else{
+           //Console.WriteLine("No existe el struct\n");
+        }
+
+        if( baseStruct != null && baseStruct.Type != SymbolType.STRUCT )
+        {
+            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+            return null;
+        }
+        Dictionary<string, Symbol> datosStructBase = (Dictionary<string, Symbol>)baseStruct.Value;
+        if( datosStructBase.Count() != context.ID_VARIABLE().Length - 2 )
+        {
+            output += $"Error al crear una variable de tipo Struct, se esperaban {datosStructBase.Count} y se recibieron {context.ID_VARIABLE().Length - 2}\n";
+            return null;
+        }
+
+        Dictionary<string, Symbol> copiaDeep = datosStructBase.ToDictionary(entry => entry.Key, entry =>  new Symbol(entry.Value.Value, entry.Value.Type, entry.Value.Mutable));
+        for( int i = 2; i < context.ID_VARIABLE().Length; i++ )
+        {
+            Symbol varBaseStruct = copiaDeep[context.ID_VARIABLE(i).GetText()];
+            if( varBaseStruct == null )
+            {
+                output += $"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.\n";
+                return null;
+            }
+            if( IsValidType( Visit(context.expr(i-2)), varBaseStruct.Type) )
+            {
+                copiaDeep[context.ID_VARIABLE(i).GetText()].Value = Visit(context.expr(i-2));
+            }
+            else
+            {
+                output += $"Error al crear una variable de tipo Struct, los tipos no son compatibles.\n";
+                return null;
+            }
+        }
+        currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), copiaDeep, SymbolType.STRUCT, false, true);
+        return null;
+    }
+
     //  ---------------------------------------------------- IF ----------------------------------------------------
     // VisitIfStmt
     public override object VisitIfStmt(gramaticaParser.IfStmtContext context)
@@ -961,4 +1066,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         output += "] \n";
     }
 
+    private void PrintDictory(Dictionary<string, Symbol> dic)
+    {
+        Console.WriteLine("{ ");
+        foreach (var item in dic)
+        {
+            Console.WriteLine($"key: {item.Key} value: {item.Value.Value}");
+        }
+        Console.WriteLine("}\n");
+    }
 }

@@ -1,15 +1,20 @@
-numeros := []int{1, 2, 3, 4} 
+struct Persona { 
+    string Nombre; 
+    int Edad; 
+    bool EsEstudiante;
+} 
 
-// Slice multidimensional inicial 
-mtx1 := [][]int{ 
-    {1, 2, 3}, 
-    {4, 5, 6}, 
-    {7, 8, 9}, 
+Persona miInstancia = { Nombre: "Alice", Edad: 25, EsEstudiante: false }; 
+
+struct Trabajo {
+  string Chamba;
+  float64 salario;
+  rune sufijoChamba;
 }
 
-mtx2 := [][][]int{
-  { {1}, {2}, {3}},
-  { {4}, {5}, {6}},
-  { {7}, {8}, {9}},
+struct PersonaChambeadora {
+  string Nombre;
+  int Edad;
+  bool Estudia;
+  struct Trabajo;
 }
-
