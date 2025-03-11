@@ -1,20 +1,5 @@
-struct Persona { 
-    string Nombre; 
-    int Edad; 
-    bool EsEstudiante;
+numeros := []int{10, 20, 30, 40, 50} 
+
+for índice, valor := range numeros { 
+    fmt.Println("índice:", índice, "valor:", valor) 
 } 
-
-Persona miInstancia = { Nombre: "Alice", Edad: 25, EsEstudiante: false }; 
-
-struct Trabajo {
-  string Chamba;
-  float64 salario;
-  rune sufijoChamba;
-}
-
-struct PersonaChambeadora {
-  string Nombre;
-  int Edad;
-  bool Estudia;
-  struct Trabajo;
-}

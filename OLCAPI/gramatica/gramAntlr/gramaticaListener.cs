@@ -277,6 +277,18 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitForAsignacion([NotNull] gramaticaParser.ForAsignacionContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>ForRange</c>
+	/// labeled alternative in <see cref="gramaticaParser.sFor"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterForRange([NotNull] gramaticaParser.ForRangeContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>ForRange</c>
+	/// labeled alternative in <see cref="gramaticaParser.sFor"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitForRange([NotNull] gramaticaParser.ForRangeContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>VarDclWithTypeAndValue</c>
 	/// labeled alternative in <see cref="gramaticaParser.varDcl"/>.
 	/// </summary>
@@ -453,6 +465,18 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitArrayAccess([NotNull] gramaticaParser.ArrayAccessContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>StructAccessAsign</c>
+	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStructAccessAsign([NotNull] gramaticaParser.StructAccessAsignContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>StructAccessAsign</c>
+	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStructAccessAsign([NotNull] gramaticaParser.StructAccessAsignContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>EqualsNotEquals</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
@@ -464,6 +488,18 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitEqualsNotEquals([NotNull] gramaticaParser.EqualsNotEqualsContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>IntToString</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterIntToString([NotNull] gramaticaParser.IntToStringContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>IntToString</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitIntToString([NotNull] gramaticaParser.IntToStringContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>AddSub</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
@@ -573,6 +609,18 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitInteger([NotNull] gramaticaParser.IntegerContext context);
 	/// <summary>
+	/// Enter a parse tree produced by the <c>StructAccess</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterStructAccess([NotNull] gramaticaParser.StructAccessContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>StructAccess</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitStructAccess([NotNull] gramaticaParser.StructAccessContext context);
+	/// <summary>
 	/// Enter a parse tree produced by the <c>MinorMajorEqual</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
@@ -608,6 +656,18 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitIdentifier([NotNull] gramaticaParser.IdentifierContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>reflectType</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterReflectType([NotNull] gramaticaParser.ReflectTypeContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>reflectType</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitReflectType([NotNull] gramaticaParser.ReflectTypeContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>Char</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
@@ -668,6 +728,18 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	void ExitArrayFindIndex([NotNull] gramaticaParser.ArrayFindIndexContext context);
+	/// <summary>
+	/// Enter a parse tree produced by the <c>floatToString</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterFloatToString([NotNull] gramaticaParser.FloatToStringContext context);
+	/// <summary>
+	/// Exit a parse tree produced by the <c>floatToString</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitFloatToString([NotNull] gramaticaParser.FloatToStringContext context);
 	/// <summary>
 	/// Enter a parse tree produced by the <c>ArrayAppend</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.

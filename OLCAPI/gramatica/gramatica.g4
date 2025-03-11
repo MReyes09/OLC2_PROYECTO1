@@ -60,6 +60,7 @@ block: '{' instrucciones* '}'
 // ----------------- Sentencia For -----------------
 sFor: 'for' expr block                              # ForCondicion
     | 'for' varDcl ';' expr ';' varAsign block      # ForAsignacion
+    | 'for' ID_VARIABLE ',' ID_VARIABLE ':=' 'range' ID_VARIABLE block # ForRange
 ;
 
 // ----------------- Declaracion de variables -----------------
@@ -86,7 +87,7 @@ contenidoSlice: expr (',' expr)*                                # SliceContenido
 varDclStruct: 'struct' ID_VARIABLE '{'( type ID_VARIABLE ';')+'}'   # DeclStructData
 ;
 
-varStructDcl: ID_VARIABLE ID_VARIABLE '=' '{' ID_VARIABLE ':' expr (',' ID_VARIABLE ':' expr)+ '}' ';'  # StructVarType
+varStructDcl: ID_VARIABLE ID_VARIABLE '=' '{' ID_VARIABLE ':' expr (',' ID_VARIABLE ':' expr)+ '}'  # StructVarType
 ;
 
 // ----------------- Asignacion de variables -----------------
@@ -94,6 +95,7 @@ varAsign: ID_VARIABLE '=' expr          # varExpr
     | ID_VARIABLE op =('+='|'-=') expr  # varAdd    
     | ID_VARIABLE op = ('++'|'--')      # varInc
     | ID_VARIABLE ('[' expr ']')+ '=' expr # ArrayAccess
+    | ID_VARIABLE '.' ID_VARIABLE '=' expr # StructAccessAsign
 ;
 
 expr: '-' expr                                                # Negate
@@ -112,10 +114,16 @@ expr: '-' expr                                                # Negate
     | '(' expr ')'                                          # Parens
     //Acceso a arreglos
     | ID_VARIABLE ('[' expr ']')+                           # ArrayAccessSimple
+    //Funciones embebidas
     | 'slices.Index('ID_VARIABLE ',' expr ')'               # ArrayFindIndex
     | 'strings.Join('ID_VARIABLE ',' expr ')'               # ArrayJoin
     | 'len('ID_VARIABLE ')'                                 # ArrayLength
     | 'append('ID_VARIABLE ',' expr ')'                     # ArrayAppend
+    | 'strconv.Atoi(' expr ')'                              # IntToString
+    | 'strconv.ParseFloat(' expr ')'                        # floatToString
+    | 'reflect.TypeOf(' expr ')'                            # reflectType
+    //Acceso a estructuras
+    | ID_VARIABLE '.' ID_VARIABLE ';'                           # StructAccess 
 ;
 
 type: 'int' 

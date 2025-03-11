@@ -176,6 +176,13 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitForAsignacion([NotNull] gramaticaParser.ForAsignacionContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>ForRange</c>
+	/// labeled alternative in <see cref="gramaticaParser.sFor"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitForRange([NotNull] gramaticaParser.ForRangeContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>VarDclWithTypeAndValue</c>
 	/// labeled alternative in <see cref="gramaticaParser.varDcl"/>.
 	/// </summary>
@@ -279,12 +286,26 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitArrayAccess([NotNull] gramaticaParser.ArrayAccessContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>StructAccessAsign</c>
+	/// labeled alternative in <see cref="gramaticaParser.varAsign"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStructAccessAsign([NotNull] gramaticaParser.StructAccessAsignContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>EqualsNotEquals</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitEqualsNotEquals([NotNull] gramaticaParser.EqualsNotEqualsContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>IntToString</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitIntToString([NotNull] gramaticaParser.IntToStringContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>AddSub</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
@@ -349,6 +370,13 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitInteger([NotNull] gramaticaParser.IntegerContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>StructAccess</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitStructAccess([NotNull] gramaticaParser.StructAccessContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>MinorMajorEqual</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
@@ -369,6 +397,13 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitIdentifier([NotNull] gramaticaParser.IdentifierContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>reflectType</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitReflectType([NotNull] gramaticaParser.ReflectTypeContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>Char</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
@@ -404,6 +439,13 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitArrayFindIndex([NotNull] gramaticaParser.ArrayFindIndexContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>floatToString</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFloatToString([NotNull] gramaticaParser.FloatToStringContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>ArrayAppend</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.

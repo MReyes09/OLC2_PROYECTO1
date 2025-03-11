@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Reflection.Metadata;
 using Antlr4.Runtime.Misc;
+using Microsoft.Extensions.Logging.Abstractions;
 public class CompilerVisitor : gramaticaBaseVisitor<object>
 {
     public string output = "";
@@ -36,6 +37,16 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             if (value is List<object> list)
             {
                 output += " [ " + string.Join(", ", list) + " ]";
+                continue;
+            }
+            else if( value is Dictionary<string, Symbol> dict )
+            {
+                output += $"{nombreStruct}"+"{ ";
+                foreach (var item in dict)
+                {
+                    output += item.Key + " : " + item.Value.Value + ", ";
+                }
+                output += " }";
                 continue;
             }
 
@@ -252,6 +263,82 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         throw new Exception("Negation can only be applied to numbers.");
     }
 
+    public override object VisitIntToString(gramaticaParser.IntToStringContext context)
+    {
+        object value = Visit(context.expr());
+        int numero = 0;
+        if (value is string && value != null)
+        {
+            try
+            {
+                numero = int.Parse((string)value);
+            }
+            catch (FormatException)
+            {
+                output += "Error: El valor no tiene un formato válido para ser convertido a entero.\n";
+            }
+            catch (OverflowException)
+            {
+                output += "Error: El valor está fuera del rango permitido para un entero.\n";
+            }
+            catch (Exception ex)
+            {
+                output += $"Error inesperado al convertir a entero: {ex.Message}\n";
+            }
+
+            return numero; // Devuelve null en caso de error
+        }
+
+        output += "Error al convertir a entero, el valor no es un string válido.\n";
+        return null;
+    }
+
+    public override object VisitFloatToString(gramaticaParser.FloatToStringContext context)
+    {
+        object value = Visit(context.expr());
+        double numero = 0.00;
+
+        if (value is string && value != null)
+        {
+            try
+            {
+                numero = float.Parse((string)value, CultureInfo.InvariantCulture);
+            }
+            catch (FormatException)
+            {
+                output += "Error: El valor no tiene un formato válido para ser convertido a flotante.\n";
+            }
+            catch (OverflowException)
+            {
+                output += "Error: El valor está fuera del rango permitido para un flotante.\n";
+            }
+            catch (Exception ex)
+            {
+                output += $"Error inesperado al convertir a flotante: {ex.Message}\n";
+            }
+
+            return numero; // Devuelve null en caso de error
+        }
+
+        output += "Error al convertir a flotante, el valor no es un string válido.\n";
+        return null;
+    }
+
+    public override object VisitReflectType(gramaticaParser.ReflectTypeContext context)
+    {
+        object tipo = Visit(context.expr());
+        return tipo switch {
+            int => "int",
+            float => "float64",
+            double => "float64",
+            bool => "bool",
+            char => "rune",
+            string => "string",
+            Dictionary<string, Symbol> => "struct",
+            List<object> => "list",
+            _ => "desconocido"
+        };
+    }
     // ----------------------------- Acceso a arreglos -----------------------------
     public override object VisitArrayAccess(gramaticaParser.ArrayAccessContext context)
     {
@@ -387,6 +474,56 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
+    // ----------------------------- ACCESO A STRUCT -----------------------------
+    public override object VisitStructAccess(gramaticaParser.StructAccessContext context)
+    {
+        string idStruct = context.ID_VARIABLE(0).GetText();
+        string idVar = context.ID_VARIABLE(1).GetText();
+        // Variables encontradas
+
+        Symbol varStruct = currentEnvironment.GetVariable(idStruct);
+        if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
+        {
+            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+            return null;
+        }
+        Dictionary<string, Symbol> datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
+        if(  datosStruct.ContainsKey(idVar) )
+        {
+            return datosStruct[idVar].Value;
+        }
+        else
+        {
+            output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+            return null;
+        }
+    }
+
+    public override object VisitStructAccessAsign([NotNull] gramaticaParser.StructAccessAsignContext context)
+    {
+        string idStruct = context.ID_VARIABLE(0).GetText();
+        string idVar = context.ID_VARIABLE(1).GetText();
+        // Variables encontradas
+
+        Symbol varStruct = currentEnvironment.GetVariable(idStruct);
+        if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
+        {
+            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+            return null;
+        }
+        Dictionary<string, Symbol> datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
+        if(  datosStruct.ContainsKey(idVar) )
+        {
+            datosStruct[idVar].Value = Visit(context.expr());
+            return null;
+        }
+        else
+        {
+            output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+            return null;
+        }
+        
+    }
     // ----------------------------- VARIABLES -----------------------------
     // ----------------------------- ASIGNACIONES -----------------------------
     public override object VisitAsignStmt(gramaticaParser.AsignStmtContext context)
@@ -644,11 +781,12 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         return null;
     }
-
+    private string nombreStruct = "";
     // VisitIdentifier
     public override object VisitIdentifier(gramaticaParser.IdentifierContext context)
     {
         string id = context.ID_VARIABLE().GetText();
+        nombreStruct = id;
         if (currentEnvironment.GetVariable(id) == null)
         {
             output += "Error al acceder a la variable, la variable no existe.\n";
@@ -997,6 +1135,51 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
+    public override object VisitForRange(gramaticaParser.ForRangeContext context)
+    {
+        Symbol variableSlice = currentEnvironment.GetVariable(context.ID_VARIABLE(2).GetText());
+        if( variableSlice.Value is not List<object> )
+        {
+            output += "Error al recorrer el slice, la variable no es un slice.\n";
+            return null;
+        }
+
+        List<object> slice = (List<object>)variableSlice.Value;
+        currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), 0, SymbolType.INT, false, true);
+
+        switch( variableSlice.Type )
+        {
+            case SymbolType.INT:
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), 0, SymbolType.INT, false, true);
+                break;
+            case SymbolType.FLOAT64:
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), 0.00, SymbolType.FLOAT64, false, true);
+                break;
+            case SymbolType.STRING:
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), "", SymbolType.STRING, false, true);
+                break;
+            case SymbolType.BOOL:
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), false, SymbolType.BOOL, false, true);
+                break;
+            case SymbolType.RUNE:
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), '\0', SymbolType.RUNE, false, true);
+                break;
+        }
+
+        Environment new_environment = new Environment(currentEnvironment);
+        currentEnvironment = new_environment;
+
+        for( int i = 0; i < slice.Count; i++ )
+        {
+            currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false);
+            currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false);
+            Visit(context.block());
+        }
+
+        currentEnvironment = new_environment.Parent;
+
+        return null;
+    }
     // Validar tipos
     private bool IsValidType(object value, SymbolType type)
     {
