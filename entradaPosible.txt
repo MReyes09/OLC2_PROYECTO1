@@ -1,5 +1,7 @@
-numeros := []int{10, 20, 30, 40, 50} 
+func hola() int {
+	fmt.Println("Saludo")
+    return 0;
+}
 
-for índice, valor := range numeros { 
-    fmt.Println("índice:", índice, "valor:", valor) 
-} 
+fmt.Println("con Return:")
+fmt.Println(hola())

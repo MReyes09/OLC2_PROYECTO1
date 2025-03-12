@@ -22,7 +22,7 @@ inicio: instrucciones*;
 // ----------------- Instrucciones -----------------
 
 instrucciones: imprimir         # PrintStmt
-    | expr                      # ExprStmt 
+    //| expr                      # ExprStmt 
     | sIf                       # IfStmt
     | sSwitch                   # SwitchInstruccion
     | '{' instrucciones* '}'    # SeccionInstruccion
@@ -32,11 +32,16 @@ instrucciones: imprimir         # PrintStmt
 	| varDcl                    # VarDeclStmt
     | varDclStruct              # VarDeclStructStmt
     | varStructDcl              # VarStructDclStmt
+    | break                     # BreakStmt
+    | continue                  # ContinueStmt
+    | functions                 # FunctionStmt
+    | varCallStatement          # CallFunctionStmt
+    | retorno                    # ReturnStmt
 ;
 
 // ----------------- Instruccion imprimir -----------------
 
-imprimir: 'fmt.Println(' expr (',' expr)*')'
+imprimir: 'fmt.Println(' (expr (',' expr)*)?')'';'?
 ;
 
 // ----------------- Sentencias de control -----------------
@@ -54,7 +59,7 @@ cases: 'case' expr ':' instrucciones* cases? # Case
 
 // ----------------- Bloque de instrucciones -----------------
 
-block: '{' instrucciones* '}'
+block: '{' instrucciones* '}'           #blockStmt
 ;
 
 // ----------------- Sentencia For -----------------
@@ -123,7 +128,8 @@ expr: '-' expr                                                # Negate
     | 'strconv.ParseFloat(' expr ')'                        # floatToString
     | 'reflect.TypeOf(' expr ')'                            # reflectType
     //Acceso a estructuras
-    | ID_VARIABLE '.' ID_VARIABLE ';'                           # StructAccess 
+    | ID_VARIABLE '.' ID_VARIABLE ';'?                           # StructAccess 
+    | varCallStatement                                      # CallFunctionValue
 ;
 
 type: 'int' 
@@ -132,4 +138,19 @@ type: 'int'
     | 'bool' 
     | 'rune'
     | 'struct'
+;
+
+break: 'break' ';'?
+;
+
+continue: 'continue' ';'?
+;
+
+functions: 'func' ID_VARIABLE '(' (ID_VARIABLE type (',' ID_VARIABLE type)*)? ')' (nuevoSlice* type)? block # Funciones
+;
+
+varCallStatement: ID_VARIABLE '(' (expr (',' expr)*)? ')' ';'? # CallFunction
+;
+
+retorno: 'return' expr ';'?
 ;

@@ -45,13 +45,6 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitPrintStmt([NotNull] gramaticaParser.PrintStmtContext context);
 	/// <summary>
-	/// Visit a parse tree produced by the <c>ExprStmt</c>
-	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
-	/// </summary>
-	/// <param name="context">The parse tree.</param>
-	/// <return>The visitor result.</return>
-	Result VisitExprStmt([NotNull] gramaticaParser.ExprStmtContext context);
-	/// <summary>
 	/// Visit a parse tree produced by the <c>IfStmt</c>
 	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
 	/// </summary>
@@ -115,6 +108,41 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitVarStructDclStmt([NotNull] gramaticaParser.VarStructDclStmtContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>BreakStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBreakStmt([NotNull] gramaticaParser.BreakStmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>ContinueStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitContinueStmt([NotNull] gramaticaParser.ContinueStmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>FunctionStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFunctionStmt([NotNull] gramaticaParser.FunctionStmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>CallFunctionStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCallFunctionStmt([NotNull] gramaticaParser.CallFunctionStmtContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>ReturnStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.instrucciones"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitReturnStmt([NotNull] gramaticaParser.ReturnStmtContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.imprimir"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
@@ -156,11 +184,12 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitDefault([NotNull] gramaticaParser.DefaultContext context);
 	/// <summary>
-	/// Visit a parse tree produced by <see cref="gramaticaParser.block"/>.
+	/// Visit a parse tree produced by the <c>blockStmt</c>
+	/// labeled alternative in <see cref="gramaticaParser.block"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
-	Result VisitBlock([NotNull] gramaticaParser.BlockContext context);
+	Result VisitBlockStmt([NotNull] gramaticaParser.BlockStmtContext context);
 	/// <summary>
 	/// Visit a parse tree produced by the <c>ForCondicion</c>
 	/// labeled alternative in <see cref="gramaticaParser.sFor"/>.
@@ -321,6 +350,13 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitParens([NotNull] gramaticaParser.ParensContext context);
 	/// <summary>
+	/// Visit a parse tree produced by the <c>CallFunctionValue</c>
+	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCallFunctionValue([NotNull] gramaticaParser.CallFunctionValueContext context);
+	/// <summary>
 	/// Visit a parse tree produced by the <c>ArrayAccessSimple</c>
 	/// labeled alternative in <see cref="gramaticaParser.expr"/>.
 	/// </summary>
@@ -459,4 +495,36 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <param name="context">The parse tree.</param>
 	/// <return>The visitor result.</return>
 	Result VisitType([NotNull] gramaticaParser.TypeContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.break"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitBreak([NotNull] gramaticaParser.BreakContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.continue"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitContinue([NotNull] gramaticaParser.ContinueContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>Funciones</c>
+	/// labeled alternative in <see cref="gramaticaParser.functions"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitFunciones([NotNull] gramaticaParser.FuncionesContext context);
+	/// <summary>
+	/// Visit a parse tree produced by the <c>CallFunction</c>
+	/// labeled alternative in <see cref="gramaticaParser.varCallStatement"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitCallFunction([NotNull] gramaticaParser.CallFunctionContext context);
+	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.retorno"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitRetorno([NotNull] gramaticaParser.RetornoContext context);
 }

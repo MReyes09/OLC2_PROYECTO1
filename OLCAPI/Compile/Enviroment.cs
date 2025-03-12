@@ -28,6 +28,7 @@ public class Symbol
 public class Environment
 {
     public Dictionary<string, Symbol> Variables = new Dictionary<string, Symbol>();
+    private Dictionary<string,  MiFunct> functions = new();
     public Environment Parent { get; set; }
 
     public Environment(Environment parent = null)
@@ -71,6 +72,34 @@ public class Environment
             Parent.SetVariable(id, value, type, mutable, false);
         }else{
             //throw new Exception("Variable " + id + " not found");
+        }
+    }
+
+    public void SetFunciones(string id, List<Tuple<string, Symbol>> parametros, gramaticaParser.BlockContext body)
+    {
+        var funcion = new MiFunct(parametros, body);  // Crea el objeto MiFunct
+        if (functions.ContainsKey(id))
+        {
+            functions[id] = funcion;
+        }
+        else
+        {
+            functions.Add(id, funcion);
+        }
+    }
+    public MiFunct GetFuncion(string id)
+    {
+        if (functions.ContainsKey(id))
+        {
+            return functions[id];
+        }
+        else if (Parent != null)
+        {
+            return Parent.GetFuncion(id);
+        }
+        else
+        {
+            return null;
         }
     }
 

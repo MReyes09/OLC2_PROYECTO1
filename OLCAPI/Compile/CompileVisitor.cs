@@ -8,27 +8,39 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public string output = "";
     private object conditionExpr;
     private Environment currentEnvironment = new Environment();
-
     // VisitProgram
     public override object VisitInicio(gramaticaParser.InicioContext context)
     {
+            // Ejecutar todas las instrucciones primero
         foreach (var instrucciones in context.instrucciones())
         {
             Visit(instrucciones);
         }
-        return null;
-    }
 
-    // VisitExprStmt
-    public override object VisitExprStmt(gramaticaParser.ExprStmtContext context)
-    {
-        return Visit(context.expr());
+        // Luego, buscar y ejecutar "main"
+        foreach (var instrucciones in context.instrucciones())
+        {
+            if (instrucciones is gramaticaParser.FunctionStmtContext functionStmt)
+            {
+                var functionName = functionStmt.functions().GetChild(1).GetText(); // 1 es la posición del ID_VARIABLE
+                if (functionName == "main")
+                {
+                    Visit(functionStmt);
+                    break; // Solo ejecuta una vez el main
+                }
+            }
+        }
+            return null;
     }
 
     // VisitPrintStmt
     public override object VisitPrintStmt(gramaticaParser.PrintStmtContext context)
     {
         var imprimir = context.imprimir();
+        if( imprimir.expr().Length == 0 ){
+            output += "\n";
+            return null;
+        }
         object value;
         foreach (var expr in imprimir.expr())
         {
@@ -50,7 +62,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 continue;
             }
 
-            output += value.ToString()+" ";
+            output += value+" ";
         }
 
         output += "\n";
@@ -111,7 +123,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return text;
     }
 
-    public override object VisitChar([NotNull] gramaticaParser.CharContext context)
+    public override object VisitChar(gramaticaParser.CharContext context)
     {
         var charText = context.GetText().Trim('\'');
         return charText[0];
@@ -499,7 +511,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
     }
 
-    public override object VisitStructAccessAsign([NotNull] gramaticaParser.StructAccessAsignContext context)
+    public override object VisitStructAccessAsign(gramaticaParser.StructAccessAsignContext context)
     {
         string idStruct = context.ID_VARIABLE(0).GetText();
         string idVar = context.ID_VARIABLE(1).GetText();
@@ -975,13 +987,29 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             Environment new_environment = new Environment(currentEnvironment);
 
             currentEnvironment = new_environment;
-            Visit(context.block(0)); // Ejecutar el bloque del 'if'
+            object result = Visit(context.block(0)); // Ejecutar el bloque del 'if'
             currentEnvironment = new_environment.Parent;
-
+            if( result is string && result.Equals("break") )
+            {
+                return "break";
+            }
+            else if (result is string && result.Equals("continue"))
+            {
+                return "continue";
+            }
+            
         }
         else if (context.block().Length > 1)
         {
-            Visit(context.block(1)); // Ejecutar el bloque del 'else' si existe
+            object result = Visit(context.block(1)); // Ejecutar el bloque del 'else' si existe
+            if( result is string && result.Equals("break") )
+            {
+                return "break";
+            }
+            else if( result is string && result.Equals("continue") )
+            {
+                return "continue";
+            }
         }
 
         return null;
@@ -1003,13 +1031,30 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             Environment new_environment = new Environment(currentEnvironment);
 
             currentEnvironment = new_environment;
-            Visit(context.block()); // Ejecutar el bloque del 'if'
+            object result = Visit(context.block()); // Ejecutar el bloque del 'if'
             currentEnvironment = new_environment.Parent;
+
+            if (result is string && result.Equals("break"))
+            {
+                return "break";
+            }
+            else if (result is string && result.Equals("continue"))
+            {
+                return "continue";
+            }
 
         }
         else
         {
-            Visit(context.sIf()); // Ejecutar el bloque del 'else if'
+            object result = Visit(context.sIf()); // Ejecutar el bloque del 'else if'
+            if (result is string && result.Equals("break"))
+            {
+                return "break";
+            }
+            else if (result is string && result.Equals("continue"))
+            {
+                return "continue";
+            }
         }
 
         return null;
@@ -1045,7 +1090,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
                 foreach (var instrucciones in context.instrucciones())
                 {
-                    Visit(instrucciones);
+                    object dato = Visit(instrucciones);
+                    if( dato is string && dato.Equals("break") )
+                    {
+                        break;
+                    }
                 }
 
                 currentEnvironment = new_environment.Parent;
@@ -1102,8 +1151,23 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         while ((bool)condition)
         {
+            object result = Visit(context.block());
 
-            Visit(context.block());
+            if (result is string)
+            {
+                if (result.Equals("break"))
+                {
+                    break; // Sale completamente del bucle
+                }
+                else if (result.Equals("continue"))
+                {
+                    // Antes de continuar, reevaluamos la condición del for
+                    condition = Visit(context.expr());
+                    continue; // Evita ejecutar cualquier código restante en la iteración actual
+                }
+            }
+
+            // Recalculamos la condición después de cada iteración
             condition = Visit(context.expr());
         }
 
@@ -1125,7 +1189,18 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         while ((bool)condition)
         {
 
-            Visit(context.block()); // Ejecutar el bloque del 'for'
+            object result = Visit(context.block()); // Ejecutar el bloque del 'for'
+            if ( result is string && result.Equals("break") )
+            {
+                break;
+            }
+            else if ( result is string && result.Equals("continue") )
+            {
+                // Antes de continuar, reevaluamos la condición del for
+                Visit(context.varAsign());
+                condition = Visit(context.expr());
+                continue; // Evita ejecutar cualquier código restante en la iteración actual
+            }
             //Actualizo la variable
             Visit(context.varAsign());
             //Evaluar la condicion
@@ -1173,13 +1248,226 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         {
             currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false);
             currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false);
-            Visit(context.block());
+            object result = Visit(context.block());
+            if ( result is string && result.Equals("break") )
+            {
+                break;
+            }
+            else if ( result is string && result.Equals("continue") )
+            {
+                currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false);
+                continue;
+            }
         }
 
         currentEnvironment = new_environment.Parent;
 
         return null;
     }
+
+    public override object VisitBreakStmt(gramaticaParser.BreakStmtContext context)
+    {
+        return "break";
+    }
+
+    public override object VisitBlockStmt(gramaticaParser.BlockStmtContext context)
+    {
+        foreach (var instruccion in context.instrucciones())
+        {
+            object value = Visit(instruccion);
+            if( value is string && value.Equals("break") )
+            {
+                return value;
+            }
+            else if( value is string && value.Equals("continue") )
+            {
+                return value;
+            }else if( value != null ){
+                return value;
+            }
+        }
+        return null;
+    }
+
+    public override object VisitContinue(gramaticaParser.ContinueContext context)
+    {
+        return "continue";
+    }
+
+    public override object VisitFunctionStmt(gramaticaParser.FunctionStmtContext context)
+    {
+        return Visit(context.functions());
+    }
+
+    public override object VisitFunciones(gramaticaParser.FuncionesContext context)
+    {
+        string id = context.ID_VARIABLE(0).GetText();   // nombre de la funcion
+        // Parametros de la funcion
+        List<Tuple<string, Symbol>> parametros = new List<Tuple<string, Symbol>>();
+        int contadorVar = 0;
+        // Agregar los parametros a la funcion
+        for (int i = 1; i < context.ID_VARIABLE().Length; i++)
+        {
+            string idParam = context.ID_VARIABLE(i).GetText();
+            SymbolType typeParam = Enum.Parse<SymbolType>(context.type(i - 1).GetText(), true);
+            switch( typeParam ){
+                case SymbolType.INT:
+                    parametros.Add( new Tuple<String, Symbol>(idParam, new Symbol(0, typeParam, true)));
+                    break;
+                case SymbolType.FLOAT64:
+                    parametros.Add( new Tuple<String, Symbol>(idParam, new Symbol(0.0, typeParam, true)));
+                    break;
+                case SymbolType.STRING:
+                    parametros.Add( new Tuple<String, Symbol>(idParam, new Symbol("", typeParam, true)));
+                    break;
+                case SymbolType.BOOL:
+                    parametros.Add( new Tuple<String, Symbol>(idParam, new Symbol(false, typeParam, true)));
+                    break;
+                case SymbolType.RUNE:
+                    parametros.Add( new Tuple<String, Symbol>(idParam, new Symbol('\0', typeParam, true)));
+                    break;
+            }
+            contadorVar += i;
+        }
+
+        if( contadorVar == context.type().Length && context.type().Length > 0 )
+        {
+            parametros.Add(new Tuple<string, Symbol>("valorRetorno&", new Symbol(null, Enum.Parse<SymbolType>(context.type(contadorVar-1).GetText(), true), true)));            
+        }else if( contadorVar == 0 && context.type().Length > 0 )
+        {
+            parametros.Add(new Tuple<string, Symbol>("valorRetorno&", new Symbol(null, Enum.Parse<SymbolType>(context.type(0).GetText(), true), true)));
+        }
+        // Bloque de la funcion
+        var body = context.block();
+        currentEnvironment.SetFunciones(id, parametros, body);
+        return null;
+    }
+
+    public override object VisitCallFunctionStmt(gramaticaParser.CallFunctionStmtContext context)
+    {
+        return Visit(context.varCallStatement());
+    }
+
+    public override object VisitCallFunction(gramaticaParser.CallFunctionContext context)
+    {
+        //output += "PAPAPUM";
+        string id = context.ID_VARIABLE().GetText();   // nombre de la funcion
+        // Parametros de la funcion
+        List<Tuple<string, Symbol>> parametros = new List<Tuple<string, Symbol>>();
+        
+        // Agregar los parametros a la funcion
+        for (int i = 0; i < context.expr().Length; i++)
+        {
+            object value = Visit(context.expr(i));
+            switch( value )
+            {
+                case int intValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(intValue, SymbolType.INT, true)));
+                    break;
+                case double doubleValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(doubleValue, SymbolType.FLOAT64, true)));
+                    break;
+                case string stringValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(stringValue, SymbolType.STRING, true)));
+                    break;
+                case bool boolValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(boolValue, SymbolType.BOOL, true)));
+                    break;
+                case char charValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(charValue, SymbolType.RUNE, true)));
+                    break;
+                default:
+                    output += "Error al llamar a la funcion, los tipos no son compatibles.\n";
+                    return null;
+            }
+        }
+
+        var funcion = currentEnvironment.GetFuncion(id);
+
+        if( funcion == null )
+        {
+            output += $"Error: La función '{id}' no existe.\n";
+            return null;
+        }
+
+        List<Tuple<string, Symbol>> parameters = funcion.Parameters;
+        gramaticaParser.BlockContext body = funcion.Body;
+
+
+        Tuple<string, Symbol> resultado = parameters.Find(p => p.Item1 == "valorRetorno&");
+        bool contReturn = false;
+        if (resultado != null)
+        {
+            if( parameters.Count - 1 != parametros.Count)
+            {
+                output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count - 1}.\n";
+                return null;         
+            }
+            contReturn = true;
+        }
+        else
+        {
+            if( parameters.Count != parametros.Count )
+            {
+                output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
+                return null;
+            }
+        }
+
+        Environment new_environment = new Environment();
+        Environment aux_enviroment = currentEnvironment;
+
+        currentEnvironment = new_environment;
+
+
+        for(int i = 0; i < parametros.Count; i++){
+            //Verifico antes los tipos
+            if( parametros[i].Item2.Type != parameters[i].Item2.Type )
+            {
+                output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                return null;
+            }
+            currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+        }
+        object valRet = Visit(body);
+        Console.WriteLine($"if { IsValidType(valRet, parameters[parameters.Count - 1].Item2.Type) }");
+        if( contReturn )
+        {
+            if( IsValidType(valRet, parameters[parameters.Count -1].Item2.Type) )
+            {
+                
+                currentEnvironment = aux_enviroment;
+                return valRet;
+            }else{
+                output += $"Error: La función '{id}' espera un valor de retorno de tipo {parameters[parameters.Count - 1].Item2.Type}, pero recibió un valor de retorno de tipo {valRet}.\n";
+                return null;
+            }
+        }
+
+        currentEnvironment = aux_enviroment;
+        
+
+        return null;
+    }
+
+    public override object VisitCallFunctionValue(gramaticaParser.CallFunctionValueContext context)
+    {
+        var resultFunct = Visit(context.varCallStatement());
+        if( resultFunct is null )
+        {
+            output += "Error al llamar a la función, la función no existe.\n";
+            return null;
+        }
+        return resultFunct;
+    }
+
+    public override object VisitReturnStmt(gramaticaParser.ReturnStmtContext context)
+    {
+        var valueRet = context.retorno();
+        return Visit(valueRet.expr());
+    }
+
     // Validar tipos
     private bool IsValidType(object value, SymbolType type)
     {
