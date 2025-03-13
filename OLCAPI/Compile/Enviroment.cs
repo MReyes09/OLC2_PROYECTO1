@@ -6,7 +6,8 @@ public enum SymbolType
     BOOL,
     RUNE,
     SLICE,
-    STRUCT
+    STRUCT,
+    VOID
 }
 
 public class Symbol
@@ -75,9 +76,9 @@ public class Environment
         }
     }
 
-    public void SetFunciones(string id, List<Tuple<string, Symbol>> parametros, gramaticaParser.BlockContext body)
+    public void SetFunciones(string id, List<Tuple<string, Symbol>> parametros, gramaticaParser.BlockContext body, SymbolType typeRet)
     {
-        var funcion = new MiFunct(parametros, body);  // Crea el objeto MiFunct
+        var funcion = new MiFunct(parametros, body, typeRet);  // Crea el objeto MiFunct
         if (functions.ContainsKey(id))
         {
             functions[id] = funcion;

@@ -1016,6 +1016,18 @@ public partial class gramaticaBaseListener : IgramaticaListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitCallFunction([NotNull] gramaticaParser.CallFunctionContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="gramaticaParser.valRet"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterValRet([NotNull] gramaticaParser.ValRetContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="gramaticaParser.valRet"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitValRet([NotNull] gramaticaParser.ValRetContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="gramaticaParser.retorno"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>

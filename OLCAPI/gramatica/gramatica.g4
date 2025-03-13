@@ -89,7 +89,7 @@ contenidoSlice: expr (',' expr)*                                # SliceContenido
     | '{' contenidoSlice '}' (',' ('{' contenidoSlice '}')?)*      # SliceContenidoSlice
 ;
 // ----------------- Declaracion de estructuras -----------------
-varDclStruct: 'struct' ID_VARIABLE '{'( type ID_VARIABLE ';')+'}'   # DeclStructData
+varDclStruct: 'type' 'struct' ID_VARIABLE '{'( ID_VARIABLE type';'?)+'}'   # DeclStructData
 ;
 
 varStructDcl: ID_VARIABLE ID_VARIABLE '=' '{' ID_VARIABLE ':' expr (',' ID_VARIABLE ':' expr)+ '}'  # StructVarType
@@ -146,10 +146,13 @@ break: 'break' ';'?
 continue: 'continue' ';'?
 ;
 
-functions: 'func' ID_VARIABLE '(' (ID_VARIABLE type (',' ID_VARIABLE type)*)? ')' (nuevoSlice* type)? block # Funciones
+functions: 'func' ID_VARIABLE '(' (ID_VARIABLE type (',' ID_VARIABLE type)*)? ')' valRet? block # Funciones
 ;
 
 varCallStatement: ID_VARIABLE '(' (expr (',' expr)*)? ')' ';'? # CallFunction
+;
+
+valRet: type
 ;
 
 retorno: 'return' expr ';'?

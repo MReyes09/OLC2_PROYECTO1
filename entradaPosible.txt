@@ -1,7 +1,0 @@
-func hola() int {
-	fmt.Println("Saludo")
-    return 0;
-}
-
-fmt.Println("con Return:")
-fmt.Println(hola())

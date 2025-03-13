@@ -42,9 +42,44 @@ namespace api.Controllers
             var parser = new gramaticaParser(tokens);
 
             var tree = parser.inicio();
-
+            SearchTree searchTree = new SearchTree();
+            searchTree.Visit(tree);
             var visitor = new CompilerVisitor();
-            visitor.Visit(tree);
+
+            foreach( var dclSimple in searchTree.declaracionesSimples )
+            {
+                visitor.Visit(dclSimple);
+            }
+
+            foreach( var dclSlice in searchTree.declaracionesArreglos )
+            {
+                visitor.Visit(dclSlice);
+            }
+
+            foreach( var dclStruct in searchTree.declaracionesStructs )
+            {
+                visitor.Visit(dclStruct);
+            }
+
+            foreach( var dlcStruct2 in searchTree.declaracionesStructs2 )
+            {
+                visitor.Visit(dlcStruct2);
+            }
+
+            foreach( var asign in searchTree.asignaciones )
+            {
+                visitor.Visit(asign);
+            }
+
+            foreach( var stmt in searchTree.Funciones )
+            {
+                visitor.Visit(stmt);
+            }
+
+            foreach( var stmtMain in searchTree.functMain )
+            {
+                visitor.Visit(stmtMain);
+            }
 
             return Ok(new { result = visitor.output });
 

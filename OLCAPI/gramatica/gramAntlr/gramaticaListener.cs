@@ -869,6 +869,16 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitCallFunction([NotNull] gramaticaParser.CallFunctionContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="gramaticaParser.valRet"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterValRet([NotNull] gramaticaParser.ValRetContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="gramaticaParser.valRet"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitValRet([NotNull] gramaticaParser.ValRetContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="gramaticaParser.retorno"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

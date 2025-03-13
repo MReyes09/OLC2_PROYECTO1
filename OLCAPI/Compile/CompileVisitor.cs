@@ -24,6 +24,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 var functionName = functionStmt.functions().GetChild(1).GetText(); // 1 es la posición del ID_VARIABLE
                 if (functionName == "main")
+
                 {
                     Visit(functionStmt);
                     break; // Solo ejecuta una vez el main
@@ -997,6 +998,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 return "continue";
             }
+            else if(result != null)
+            {
+                return result;
+            }
             
         }
         else if (context.block().Length > 1)
@@ -1009,6 +1014,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             else if( result is string && result.Equals("continue") )
             {
                 return "continue";
+            }
+            else if(result != null)
+            {
+                return result;
             }
         }
 
@@ -1042,6 +1051,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 return "continue";
             }
+            else if(result != null)
+            {
+                return result;
+            }
 
         }
         else
@@ -1054,6 +1067,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             else if (result is string && result.Equals("continue"))
             {
                 return "continue";
+            }
+            else if(result != null)
+            {
+                return result;
             }
         }
 
@@ -1165,6 +1182,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     condition = Visit(context.expr());
                     continue; // Evita ejecutar cualquier código restante en la iteración actual
                 }
+                else if(result != null)
+                {
+                    return result;
+                }
             }
 
             // Recalculamos la condición después de cada iteración
@@ -1200,6 +1221,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 Visit(context.varAsign());
                 condition = Visit(context.expr());
                 continue; // Evita ejecutar cualquier código restante en la iteración actual
+            }
+            else if(result != null)
+            {
+                return result;
             }
             //Actualizo la variable
             Visit(context.varAsign());
@@ -1259,6 +1284,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false);
                 continue;
             }
+            else if(result != null)
+            {
+                return result;
+            }
         }
 
         currentEnvironment = new_environment.Parent;
@@ -1297,6 +1326,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
     public override object VisitFunctionStmt(gramaticaParser.FunctionStmtContext context)
     {
+        if( context.functions().GetChild(1).GetText() == "main" ){
+            Visit(context.functions());
+            var varFunc = currentEnvironment.GetFuncion("main");
+            var body = varFunc.Body;
+            return Visit(body);
+
+        }
         return Visit(context.functions());
     }
 
@@ -1330,17 +1366,16 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             contadorVar += i;
         }
-
-        if( contadorVar == context.type().Length && context.type().Length > 0 )
-        {
-            parametros.Add(new Tuple<string, Symbol>("valorRetorno&", new Symbol(null, Enum.Parse<SymbolType>(context.type(contadorVar-1).GetText(), true), true)));            
-        }else if( contadorVar == 0 && context.type().Length > 0 )
-        {
-            parametros.Add(new Tuple<string, Symbol>("valorRetorno&", new Symbol(null, Enum.Parse<SymbolType>(context.type(0).GetText(), true), true)));
+        SymbolType tipoRetorno;
+        if( context.valRet() != null ){
+            var valRet = context.valRet();
+            tipoRetorno = Enum.Parse<SymbolType>(valRet.type().GetText() , true);
+        }else{
+            tipoRetorno = SymbolType.VOID;
         }
         // Bloque de la funcion
         var body = context.block();
-        currentEnvironment.SetFunciones(id, parametros, body);
+        currentEnvironment.SetFunciones(id, parametros, body, tipoRetorno);
         return null;
     }
 
@@ -1393,59 +1428,49 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         List<Tuple<string, Symbol>> parameters = funcion.Parameters;
         gramaticaParser.BlockContext body = funcion.Body;
+        SymbolType tipoReturn = funcion.ValRet;
 
 
-        Tuple<string, Symbol> resultado = parameters.Find(p => p.Item1 == "valorRetorno&");
-        bool contReturn = false;
-        if (resultado != null)
+        if( parameters.Count != parametros.Count )
         {
-            if( parameters.Count - 1 != parametros.Count)
-            {
-                output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count - 1}.\n";
-                return null;         
-            }
-            contReturn = true;
-        }
-        else
-        {
-            if( parameters.Count != parametros.Count )
-            {
-                output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
-                return null;
-            }
+            output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
+            return null;
         }
 
-        Environment new_environment = new Environment();
-        Environment aux_enviroment = currentEnvironment;
-
-        currentEnvironment = new_environment;
-
-
-        for(int i = 0; i < parametros.Count; i++){
-            //Verifico antes los tipos
-            if( parametros[i].Item2.Type != parameters[i].Item2.Type )
-            {
-                output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
-                return null;
-            }
-            currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
-        }
-        object valRet = Visit(body);
-        Console.WriteLine($"if { IsValidType(valRet, parameters[parameters.Count - 1].Item2.Type) }");
-        if( contReturn )
+        if( tipoReturn != SymbolType.VOID )
         {
-            if( IsValidType(valRet, parameters[parameters.Count -1].Item2.Type) )
+            for(int i = 0; i < parametros.Count; i++){
+                //Verifico antes los tipos
+                if( parametros[i].Item2.Type != parameters[i].Item2.Type )
+                {
+                    output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                    return null;
+                }
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+            }
+            object valRet = Visit(body);
+
+            if( IsValidType( valRet, tipoReturn ) )
             {
-                
-                currentEnvironment = aux_enviroment;
                 return valRet;
-            }else{
-                output += $"Error: La función '{id}' espera un valor de retorno de tipo {parameters[parameters.Count - 1].Item2.Type}, pero recibió un valor de retorno de tipo {valRet}.\n";
+            }
+            else
+            {
+                output += $"Error: La función '{id}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.\n";
                 return null;
             }
+        }else{
+            for(int i = 0; i < parametros.Count; i++){
+                //Verifico antes los tipos
+                if( parametros[i].Item2.Type != parameters[i].Item2.Type )
+                {
+                    output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                    return null;
+                }
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+            }
+            Visit(body);
         }
-
-        currentEnvironment = aux_enviroment;
         
 
         return null;
@@ -1454,11 +1479,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public override object VisitCallFunctionValue(gramaticaParser.CallFunctionValueContext context)
     {
         var resultFunct = Visit(context.varCallStatement());
-        if( resultFunct is null )
-        {
-            output += "Error al llamar a la función, la función no existe.\n";
-            return null;
-        }
         return resultFunct;
     }
 

@@ -522,6 +522,12 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitCallFunction([NotNull] gramaticaParser.CallFunctionContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.valRet"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitValRet([NotNull] gramaticaParser.ValRetContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.retorno"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>
