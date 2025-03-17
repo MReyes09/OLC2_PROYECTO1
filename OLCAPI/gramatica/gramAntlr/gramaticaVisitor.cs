@@ -490,6 +490,12 @@ public interface IgramaticaVisitor<Result> : IParseTreeVisitor<Result> {
 	/// <return>The visitor result.</return>
 	Result VisitArrayAppend([NotNull] gramaticaParser.ArrayAppendContext context);
 	/// <summary>
+	/// Visit a parse tree produced by <see cref="gramaticaParser.posicion"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	/// <return>The visitor result.</return>
+	Result VisitPosicion([NotNull] gramaticaParser.PosicionContext context);
+	/// <summary>
 	/// Visit a parse tree produced by <see cref="gramaticaParser.type"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

@@ -122,7 +122,7 @@ expr: '-' expr                                                # Negate
     //Funciones embebidas
     | 'slices.Index('ID_VARIABLE ',' expr ')'               # ArrayFindIndex
     | 'strings.Join('ID_VARIABLE ',' expr ')'               # ArrayJoin
-    | 'len('ID_VARIABLE ')'                                 # ArrayLength
+    | 'len('ID_VARIABLE (posicion)* ')'                                 # ArrayLength
     | 'append('ID_VARIABLE ',' expr ')'                     # ArrayAppend
     | 'strconv.Atoi(' expr ')'                              # IntToString
     | 'strconv.ParseFloat(' expr ')'                        # floatToString
@@ -130,6 +130,9 @@ expr: '-' expr                                                # Negate
     //Acceso a estructuras
     | ID_VARIABLE '.' ID_VARIABLE ';'?                           # StructAccess 
     | varCallStatement                                      # CallFunctionValue
+;
+
+posicion: '[' expr ']'
 ;
 
 type: 'int' 
@@ -155,5 +158,5 @@ varCallStatement: ID_VARIABLE '(' (expr (',' expr)*)? ')' ';'? # CallFunction
 valRet: type
 ;
 
-retorno: 'return' expr ';'?
+retorno: 'return' expr? ';'?
 ;

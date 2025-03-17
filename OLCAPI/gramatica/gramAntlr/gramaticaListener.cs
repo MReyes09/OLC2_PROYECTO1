@@ -815,6 +815,16 @@ public interface IgramaticaListener : IParseTreeListener {
 	/// <param name="context">The parse tree.</param>
 	void ExitArrayAppend([NotNull] gramaticaParser.ArrayAppendContext context);
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="gramaticaParser.posicion"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void EnterPosicion([NotNull] gramaticaParser.PosicionContext context);
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="gramaticaParser.posicion"/>.
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	void ExitPosicion([NotNull] gramaticaParser.PosicionContext context);
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="gramaticaParser.type"/>.
 	/// </summary>
 	/// <param name="context">The parse tree.</param>

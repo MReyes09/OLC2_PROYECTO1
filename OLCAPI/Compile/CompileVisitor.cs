@@ -49,7 +49,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
             if (value is List<object> list)
             {
-                output += " [ " + string.Join(", ", list) + " ]";
+                output += "{" + getStringSlice(list, "") + " }"; 
                 continue;
             }
             else if( value is Dictionary<string, Symbol> dict )
@@ -315,7 +315,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         {
             try
             {
-                numero = float.Parse((string)value, CultureInfo.InvariantCulture);
+                numero = double.Parse((string)value, CultureInfo.InvariantCulture);
             }
             catch (FormatException)
             {
@@ -340,17 +340,32 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public override object VisitReflectType(gramaticaParser.ReflectTypeContext context)
     {
         object tipo = Visit(context.expr());
-        return tipo switch {
-            int => "int",
-            float => "float64",
-            double => "float64",
-            bool => "bool",
-            char => "rune",
-            string => "string",
-            Dictionary<string, Symbol> => "struct",
-            List<object> => "list",
-            _ => "desconocido"
-        };
+
+        switch (tipo)
+        {
+            case int:
+                return "int";
+            case float:
+                return "float64";
+            case double:
+                return "float64";
+            case bool:
+                return "bool";
+            case char:
+                return "rune";
+            case string:
+                return "string";
+            case Dictionary<string, Symbol>:
+                return "struct";
+            case List<object>:
+                List<object> lista = (List<object>)tipo;
+                string cadena = GetDimensionSlice(lista, "[]", false);
+
+                return cadena;
+            default:
+                return "desconocido";
+        }
+
     }
     // ----------------------------- Acceso a arreglos -----------------------------
     public override object VisitArrayAccess(gramaticaParser.ArrayAccessContext context)
@@ -381,11 +396,18 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         List<Object> listaBase = new List<Object>();
         var variable = currentEnvironment.GetVariable(id);
         listaBase = (List<Object>)variable.Value;
+        int contador = 0;
 
         foreach (var expr in context.expr())
         {
             var index = Visit(expr);
             object dataList = listaBase[(int)index];
+
+            if( contador == context.expr().Length - 1 )
+            {
+                return dataList;
+            }
+            
             if (dataList is List<Object>)
             {
                 listaBase = (List<Object>)dataList;
@@ -394,6 +416,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 return dataList;
             }
+            contador++;
         }
 
         return null;
@@ -449,8 +472,37 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
             return null;
         }
+        int len =  0;
+        if( context.posicion().Length == 0 )
+        {
+            len = tempList.Count;
+        }
+        else
+        {
+            var listaBase = (List<object>) variable.Value;
+            foreach (var pos in context.posicion())
+            {
+                int index = (int)Visit(pos.expr());
+                var data = (List<object>)listaBase[index];
+                if( data is List<object> )
+                {
+                    listaBase = data;
+                }
+                else
+                {
+                    output += "Error al acceder al arreglo, la funcion no es un arreglo o la posicion es invalida.\n";
+                    return null;
+                }
+            }
+            len = listaBase.Count();
+        }
 
-        return tempList.Count;
+        if( len == 0 ){
+            output += "Error al acceder al arreglo, la funcion no es un arreglo o la posicion es invalida.\n";
+            return null;
+        }
+
+        return len;
     }
 
     public override object VisitArrayAppend(gramaticaParser.ArrayAppendContext context)
@@ -548,7 +600,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     {
         string id = context.ID_VARIABLE().GetText();
         object value = Visit(context.expr());
-
         SymbolType type = currentEnvironment.GetVariable(id).Type;
         bool mutabilidad = currentEnvironment.GetVariable(id).Mutable;
 
@@ -773,6 +824,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     {
         var id = context.ID_VARIABLE().GetText();
         var value = Visit(context.expr());
+
+        if( value is List<object> tempList){
+            string dataType = GetDimensionSlice(tempList, "", true);
+            SymbolType symbolType = Enum.Parse<SymbolType>(dataType, true);
+            currentEnvironment.SetVariable(id, value, symbolType, false, true);
+            return null;
+        }
 
         switch (value)
         {
@@ -1002,6 +1060,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 return result;
             }
+            else if(result is string && result.Equals("Excepcion___Return_Void"))
+            {
+                return result;
+            }
             
         }
         else if (context.block().Length > 1)
@@ -1016,6 +1078,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 return "continue";
             }
             else if(result != null)
+            {
+                return result;
+            }
+            else if(result is string && result.Equals("Excepcion___Return_Void"))
             {
                 return result;
             }
@@ -1055,6 +1121,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 return result;
             }
+            else if(result is string && result.Equals("Excepcion___Return_Void"))
+            {
+                return result;
+            }
 
         }
         else
@@ -1069,6 +1139,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 return "continue";
             }
             else if(result != null)
+            {
+                return result;
+            }
+            else if(result is string && result.Equals("Excepcion___Return_Void"))
             {
                 return result;
             }
@@ -1186,6 +1260,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 {
                     return result;
                 }
+                else if(result is string && result.Equals("Excepcion___Return_Void"))
+                {
+                    return result;
+                }
             }
 
             // Recalculamos la condición después de cada iteración
@@ -1223,6 +1301,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 continue; // Evita ejecutar cualquier código restante en la iteración actual
             }
             else if(result != null)
+            {
+                return result;
+            }
+
+            else if(result is string && result.Equals("Excepcion___Return_Void"))
             {
                 return result;
             }
@@ -1288,6 +1371,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             {
                 return result;
             }
+            else if(result is string && result.Equals("Excepcion___Return_Void"))
+            {
+                return result;
+            }
         }
 
         currentEnvironment = new_environment.Parent;
@@ -1324,6 +1411,8 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return "continue";
     }
 
+
+    //  ---------------------------------------------------- FUNCIONES ----------------------------------------------------
     public override object VisitFunctionStmt(gramaticaParser.FunctionStmtContext context)
     {
         if( context.functions().GetChild(1).GetText() == "main" ){
@@ -1374,7 +1463,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             tipoRetorno = SymbolType.VOID;
         }
         // Bloque de la funcion
-        var body = context.block();
+        var body = context.block();        
         currentEnvironment.SetFunciones(id, parametros, body, tipoRetorno);
         return null;
     }
@@ -1386,7 +1475,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
     public override object VisitCallFunction(gramaticaParser.CallFunctionContext context)
     {
-        //output += "PAPAPUM";
         string id = context.ID_VARIABLE().GetText();   // nombre de la funcion
         // Parametros de la funcion
         List<Tuple<string, Symbol>> parametros = new List<Tuple<string, Symbol>>();
@@ -1395,6 +1483,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         for (int i = 0; i < context.expr().Length; i++)
         {
             object value = Visit(context.expr(i));
+
+            if (value == null)
+            {
+                output += $"Error: No se pudo evaluar el parámetro en la posición {i} al llamar la función '{id}'.\n";
+                return null;
+            }
+
             switch( value )
             {
                 case int intValue:
@@ -1413,7 +1508,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(charValue, SymbolType.RUNE, true)));
                     break;
                 default:
-                    output += "Error al llamar a la funcion, los tipos no son compatibles.\n";
+                    output += $"Error: Tipo de parámetro no compatible en la posición {i} al llamar la función '{id}'.\n";
                     return null;
             }
         }
@@ -1430,12 +1525,14 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         gramaticaParser.BlockContext body = funcion.Body;
         SymbolType tipoReturn = funcion.ValRet;
 
-
         if( parameters.Count != parametros.Count )
         {
             output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
             return null;
         }
+
+        Environment environment = new Environment(currentEnvironment);
+        currentEnvironment = environment;
 
         if( tipoReturn != SymbolType.VOID )
         {
@@ -1444,6 +1541,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 if( parametros[i].Item2.Type != parameters[i].Item2.Type )
                 {
                     output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                    currentEnvironment = environment.Parent;
                     return null;
                 }
                 currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
@@ -1452,11 +1550,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
             if( IsValidType( valRet, tipoReturn ) )
             {
+                currentEnvironment = environment.Parent;
                 return valRet;
             }
             else
             {
                 output += $"Error: La función '{id}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.\n";
+                currentEnvironment = environment.Parent;
                 return null;
             }
         }else{
@@ -1465,14 +1565,14 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 if( parametros[i].Item2.Type != parameters[i].Item2.Type )
                 {
                     output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                    currentEnvironment = environment.Parent;
                     return null;
                 }
                 currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
             }
             Visit(body);
         }
-        
-
+        currentEnvironment = environment.Parent;
         return null;
     }
 
@@ -1485,7 +1585,12 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public override object VisitReturnStmt(gramaticaParser.ReturnStmtContext context)
     {
         var valueRet = context.retorno();
-        return Visit(valueRet.expr());
+        if( valueRet.expr() != null )
+        {
+            return Visit(valueRet.expr());
+        }else{
+            return "Excepcion___Return_Void";
+        }
     }
 
     // Validar tipos
@@ -1565,5 +1670,65 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             Console.WriteLine($"key: {item.Key} value: {item.Value.Value}");
         }
         Console.WriteLine("}\n");
+    }
+
+    private string GetDimensionSlice(List<object> listBase, string cadena, bool onlyType){
+        
+        if(  listBase[0] is List<object>)
+        {
+            if( onlyType )
+            {
+                GetDimensionSlice((List<object>)listBase[0], cadena, onlyType);
+            }
+            else
+            {
+                GetDimensionSlice((List<object>)listBase[0], cadena + "[]", onlyType);
+            }            
+        }
+        else
+        {
+            object contenido = listBase[0];
+            if( contenido is int )
+            {
+                cadena += "int";
+            }
+            else if( contenido is double )
+            {
+                cadena += "float64";
+            }
+            else if( contenido is string )
+            {
+                cadena += "string";
+            }
+            else if( contenido is bool )
+            {
+                cadena += "bool";
+            }
+            else if( contenido is char )
+            {
+                cadena += "rune";
+            }
+            return cadena;
+        }
+        return cadena;
+    }
+
+    private string getStringSlice(List<object> lista, string cadena){
+        
+        foreach( var item in lista )
+        {
+            if( item is List<object> )
+            {
+                cadena += "\n\t{";
+                cadena = getStringSlice((List<object>)item, cadena);
+                cadena += " },\n";
+            }
+            else
+            {
+                cadena += " " + item.ToString();
+            }
+        }
+        
+        return cadena;
     }
 }

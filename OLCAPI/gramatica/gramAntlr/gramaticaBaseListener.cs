@@ -952,6 +952,18 @@ public partial class gramaticaBaseListener : IgramaticaListener {
 	/// <param name="context">The parse tree.</param>
 	public virtual void ExitArrayAppend([NotNull] gramaticaParser.ArrayAppendContext context) { }
 	/// <summary>
+	/// Enter a parse tree produced by <see cref="gramaticaParser.posicion"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void EnterPosicion([NotNull] gramaticaParser.PosicionContext context) { }
+	/// <summary>
+	/// Exit a parse tree produced by <see cref="gramaticaParser.posicion"/>.
+	/// <para>The default implementation does nothing.</para>
+	/// </summary>
+	/// <param name="context">The parse tree.</param>
+	public virtual void ExitPosicion([NotNull] gramaticaParser.PosicionContext context) { }
+	/// <summary>
 	/// Enter a parse tree produced by <see cref="gramaticaParser.type"/>.
 	/// <para>The default implementation does nothing.</para>
 	/// </summary>
