@@ -5,6 +5,7 @@ using Antlr4.Runtime.Misc;
 public class SearchTree : gramaticaBaseVisitor<object>
 {
     public List<gramaticaParser.FunctionStmtContext> functMain { get; } = new();
+    public List<gramaticaParser.FunctionStructStmtContext> functStruct { get; } = new();
     public List<gramaticaParser.FunctionStmtContext> Funciones { get; } = new();
     public List<gramaticaParser.VarDeclStmtContext> declaracionesSimples { get; } = new();
     public List<gramaticaParser.VarDeclSliceStmtContext> declaracionesArreglos { get; } = new();
@@ -27,6 +28,12 @@ public class SearchTree : gramaticaBaseVisitor<object>
             Funciones.Add(context);   
         }
 
+        return null;
+    }
+
+    public override object VisitFunctionStructStmt(gramaticaParser.FunctionStructStmtContext context)
+    {
+        functStruct.Add(context);
         return null;
     }
 

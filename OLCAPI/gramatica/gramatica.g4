@@ -35,7 +35,9 @@ instrucciones: imprimir         # PrintStmt
     | break                     # BreakStmt
     | continue                  # ContinueStmt
     | functions                 # FunctionStmt
+    | functionStruct            # FunctionStructStmt
     | varCallStatement          # CallFunctionStmt
+    | varCallFuncStruct         # CallFunctionStructStmt
     | retorno                    # ReturnStmt
 ;
 
@@ -132,6 +134,7 @@ expr: '-' expr                                                # Negate
     //Acceso a estructuras
     | ID_VARIABLE ('.' ID_VARIABLE)+ ';'?                   # StructAccess 
     | varCallStatement                                      # CallFunctionValue
+    | varCallFuncStruct                                     # CallFunctionStructValue   
 ;
 
 posicion: '[' expr ']'
@@ -155,7 +158,16 @@ continue: 'continue' ';'?
 functions: 'func' ID_VARIABLE '(' (ID_VARIABLE type (',' ID_VARIABLE type)*)? ')' valRet? block # Funciones
 ;
 
+functionStruct: 'func' '(' ID_VARIABLE ID_VARIABLE ')'  ID_VARIABLE '(' defParams? ')' valRet? block   # FuncionesStructsNativas
+;
+
+defParams: ID_VARIABLE type (',' ID_VARIABLE type)*
+;
+
 varCallStatement: ID_VARIABLE '(' (expr (',' expr)*)? ')' ';'? # CallFunction
+;
+
+varCallFuncStruct: ID_VARIABLE '.' ID_VARIABLE '(' (expr (',' expr)*)? ')' ';'? # CallFunctionStruct
 ;
 
 valRet: type

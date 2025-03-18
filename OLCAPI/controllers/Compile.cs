@@ -76,6 +76,11 @@ namespace api.Controllers
                 visitor.Visit(stmt);
             }
 
+            foreach (var stmtStruct in searchTree.functStruct)
+            {
+                visitor.Visit(stmtStruct);
+            }
+
             foreach( var stmtMain in searchTree.functMain )
             {
                 visitor.Visit(stmtMain);

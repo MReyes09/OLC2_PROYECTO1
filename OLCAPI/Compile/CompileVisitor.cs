@@ -8,6 +8,8 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     public string output = "";
     private object conditionExpr;
     private Environment currentEnvironment = new Environment();
+    private Dictionary<string, List<string>> Struct_Relational = new Dictionary<string, List<string>>();
+    private Dictionary<string, List<string>> structFunc_Relational = new Dictionary<string, List<string>>();
     // VisitProgram
     public override object VisitInicio(gramaticaParser.InicioContext context)
     {
@@ -190,11 +192,45 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         // Verificar si los tipos son compatibles (iguales o int y double)
         bool areComparable = left.GetType() == right.GetType() ||
                             (left is int && right is double) ||
-                            (left is double && right is int);
+                            (left is double && right is int) ||
+                            (left is char && right is char) ||
+                            (left is string && right is string);
 
         // Si los tipos no son compatibles, retornamos el error
         if (!areComparable)
         {
+            if( left != null )
+            {
+                if( right is string)
+                {
+                    if(right == "nil")
+                    {
+                        switch(context.op.Text)
+                        {
+                            case "==":
+                                return false;
+                            case "!=":
+                                return true;
+                        }
+                    }
+                }
+            }
+            else if( right != null)
+            {
+                if( left is string)
+                {
+                    if(left == "nil")
+                    {
+                        switch(context.op.Text)
+                        {
+                            case "==":
+                                return false;
+                            case "!=":
+                                return true;
+                        }
+                    }
+                }
+            }
             output += "Error al operar ==|!= los tipos de datos no son operables.\n";
             return false;
         }
@@ -1093,12 +1129,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     {
         var idStruct = context.ID_VARIABLE(0).GetText();
         Symbol baseStruct = currentEnvironment.GetVariable(idStruct);
-        if( baseStruct != null ){
-            //Console.WriteLine("Existe el struct\n");
-        }
-        else{
-           //Console.WriteLine("No existe el struct\n");
-        }
 
         if( baseStruct != null && baseStruct.Type != SymbolType.STRUCT )
         {
@@ -1121,6 +1151,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 output += $"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.\n";
                 return null;
             }
+            var expVisit = Visit(context.expr(i-2));
+            if( expVisit.Equals("nil") )
+            {
+                copiaDeep[context.ID_VARIABLE(i).GetText()].Value = "nil";
+                continue;
+            }
+
             if( IsValidType( Visit(context.expr(i-2)), varBaseStruct.Type) )
             {
                 copiaDeep[context.ID_VARIABLE(i).GetText()].Value = Visit(context.expr(i-2));
@@ -1132,6 +1169,14 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
         }
         currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), copiaDeep, SymbolType.STRUCT, false, true);
+        if( Struct_Relational.ContainsKey(idStruct) )
+        {
+            Struct_Relational[idStruct].Add(context.ID_VARIABLE(1).GetText());
+        }
+        else
+        {
+            Struct_Relational.Add(idStruct, new List<string>(){context.ID_VARIABLE(1).GetText()});
+        }
         return null;
     }
 
@@ -1179,6 +1224,14 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
         }
         currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), copiaDeep, SymbolType.STRUCT, true, true);
+        if( Struct_Relational.ContainsKey(idStruct) )
+        {
+            Struct_Relational[idStruct].Add(context.ID_VARIABLE(0).GetText());
+        }
+        else
+        {
+            Struct_Relational.Add(idStruct, new List<string>(){context.ID_VARIABLE(0).GetText()});
+        }
         return null;
     }
     //  ---------------------------------------------------- IF ----------------------------------------------------
@@ -1737,6 +1790,243 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     {
         var resultFunct = Visit(context.varCallStatement());
         return resultFunct;
+    }
+
+    //------------------------------------------------------ FUNCIONES DE STRUCT ------------------------------------------------------
+    public override object VisitFunctionStructStmt(gramaticaParser.FunctionStructStmtContext context)
+    {
+        return Visit(context.functionStruct());
+    }
+
+    public override object VisitFuncionesStructsNativas(gramaticaParser.FuncionesStructsNativasContext context)
+    {
+        string nombreFunc = context.ID_VARIABLE(2).GetText();
+        var parametrosDef = context.defParams();
+        List<Tuple<string, Symbol>> parametros = new List<Tuple<string, Symbol>>();
+
+        if( parametrosDef != null )
+        {
+            for( int i = 0; i < parametrosDef.ID_VARIABLE().Length; i++ )
+            {
+                string id = parametrosDef.ID_VARIABLE(i).GetText();
+                SymbolType tipo = Enum.Parse<SymbolType>(parametrosDef.type(i).GetText(), true);
+                switch(tipo)
+                {
+                    case SymbolType.INT:
+                        parametros.Add(new Tuple<string, Symbol>(id, new Symbol(0, tipo, true)));
+                        break;
+                    case SymbolType.FLOAT64:
+                        parametros.Add(new Tuple<string, Symbol>(id, new Symbol(0.0, tipo, true)));
+                        break;
+                    case SymbolType.STRING:
+                        parametros.Add(new Tuple<string, Symbol>(id, new Symbol("", tipo, true)));
+                        break;
+                    case SymbolType.BOOL:
+                        parametros.Add(new Tuple<string, Symbol>(id, new Symbol(false, tipo, true)));
+                        break;
+                    case SymbolType.RUNE:
+                        parametros.Add(new Tuple<string, Symbol>(id, new Symbol('\0', tipo, true)));
+                        break;
+                }
+            }
+        }        
+        SymbolType tipoRetorno;
+        if( context.valRet() != null )
+        {
+            var valRet = context.valRet();
+            tipoRetorno = Enum.Parse<SymbolType>(valRet.type().GetText(), true);
+        }else{
+            tipoRetorno = SymbolType.VOID;
+        }
+        // ----------------- variable definida como struct -----------------
+        string idVar = context.ID_VARIABLE(0).GetText();
+        string idStruct = context.ID_VARIABLE(1).GetText();
+
+        Symbol structVar = currentEnvironment.GetVariable(idStruct);
+        if( structVar == null || structVar.Type != SymbolType.STRUCT )
+        {
+            output += $"Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+            return null;
+        }
+        parametros.Add(new Tuple<string, Symbol>(idVar, structVar));
+        var body = context.block();
+        currentEnvironment.SetFunciones(nombreFunc, parametros, body, tipoRetorno);
+        
+        if( structFunc_Relational.ContainsKey(idStruct) )
+        {
+            structFunc_Relational[idStruct].Add(nombreFunc);
+        }
+        else
+        {
+            structFunc_Relational.Add(idStruct, new List<string>(){nombreFunc});
+        }
+
+        return null;
+    }
+
+    public override object VisitCallFunctionStructStmt(gramaticaParser.CallFunctionStructStmtContext context)
+    {
+        return Visit(context.varCallFuncStruct());
+    }
+
+    public override object VisitCallFunctionStructValue(gramaticaParser.CallFunctionStructValueContext context)
+    {
+        var result = Visit(context.varCallFuncStruct());
+        return result;
+    }
+
+    public override object VisitCallFunctionStruct(gramaticaParser.CallFunctionStructContext context)
+    {
+        string nameStruct = context.ID_VARIABLE(0).GetText();
+        string nameFunctStruct = context.ID_VARIABLE(1).GetText();
+
+        //Valida 1 - Existe la variable?
+        Symbol structVar = currentEnvironment.GetVariable(nameStruct);
+        if( structVar == null || structVar.Type != SymbolType.STRUCT )
+        {
+            output += $"Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+            return null;
+        }
+        // Validacion 2 - Existe en el diccionario de Structs_Relational
+        string structVarBase = "";
+        bool findStructVar = false;
+        foreach(var item in Struct_Relational)
+        {
+            structVarBase = item.Key;
+
+            foreach( var item2 in item.Value )
+            {
+                if( item2.Equals(nameStruct) )
+                {
+                    findStructVar = true;
+                    break;
+                }
+            }
+        }
+        if( !findStructVar )
+        {
+            output += $"Error: la variable {nameStruct} no es un struct, no se puede acceder a la funcion {nameStruct}.\n";
+            return null;
+        }
+        // Validacion 3 - Existe en el diccionario el nombre de la funcion en structFunc_Relational
+        findStructVar = false;
+        List<string> funcionesStruct = structFunc_Relational[structVarBase];
+        foreach( var item in funcionesStruct )
+        {
+            if( item.Equals(nameFunctStruct) )
+            {
+                findStructVar = true;
+                break;
+            }
+        }
+        if( !findStructVar )
+        {
+            output += $"Error: la funcion {nameFunctStruct} no existe en el struct {nameStruct} o no es accesible para este.\n";
+            return null;
+        }
+
+        //Agregar los parametros de la funcion
+        List<Tuple<string, Symbol>> parametros = new List<Tuple<string, Symbol>>();
+        for( int i = 0; i < context.expr().Length; i++ )
+        {
+            object value = Visit(context.expr(i));
+            if( value == null )
+            {
+                output += $"Error: No se pudo evaluar el parámetro en la posición {i} al llamar la función '{nameFunctStruct}'.\n";
+                return null;
+            }
+            switch( value )
+            {
+                case int intValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(intValue, SymbolType.INT, true)));
+                    break;
+                case double doubleValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(doubleValue, SymbolType.FLOAT64, true)));
+                    break;
+                case string stringValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(stringValue, SymbolType.STRING, true)));
+                    break;
+                case bool boolValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(boolValue, SymbolType.BOOL, true)));
+                    break;
+                case char charValue:
+                    parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(charValue, SymbolType.RUNE, true)));
+                    break;
+                default:
+                    output += $"Error: Tipo de parámetro no compatible en la posición {i} al llamar la función '{nameFunctStruct}'.\n";
+                    return null;
+            }
+        }
+        var funcion = currentEnvironment.GetFuncion(nameFunctStruct);
+        if(funcion == null)
+        {
+            output += $"Error: La función '{nameFunctStruct}' no existe.\n";
+            return null;   
+        }
+
+        List<Tuple<string, Symbol>> parameters = funcion.Parameters;
+        gramaticaParser.BlockContext body = funcion.Body;
+        SymbolType tipoReturn = funcion.ValRet;
+
+        parametros.Add(new Tuple<string, Symbol>(parameters[parameters.Count() - 1].Item1, structVar)  );
+        if( parameters.Count != parametros.Count)
+        {
+            output += $"Error: La función '{nameFunctStruct}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
+            return null;   
+        }
+
+        Environment environment = new Environment(currentEnvironment);
+        currentEnvironment = environment;
+
+        if( tipoReturn != SymbolType.VOID )
+        {
+            for(int i = 0; i < parametros.Count; i++){
+                //Verifico antes los tipos
+                if( parametros[i].Item2.Type != parameters[i].Item2.Type )
+                {
+                    output += $"Error: La función '{nombreStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                    currentEnvironment = environment.Parent;
+                    return null;
+                }
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+            }
+            int posicionFinal = parametros.Count - 1;
+            currentEnvironment.SetVariable(parameters[posicionFinal].Item1, structVar.Value, structVar.Type, structVar.Mutable, true);
+            
+            object valRet = Visit(body);
+
+            if( IsValidType( valRet, tipoReturn ) )
+            {
+                currentEnvironment = environment.Parent;
+                return valRet;
+            }
+            else
+            {
+                output += $"Error: La función '{nombreStruct}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.\n";
+                currentEnvironment = environment.Parent;
+                return null;
+            }
+        }
+        else
+        {
+            for(int i = 0; i < parametros.Count; i++){
+                //Verifico antes los tipos
+                if( parametros[i].Item2.Type != parameters[i].Item2.Type )
+                {
+                    output += $"Error: La función '{nombreStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
+                    currentEnvironment = environment.Parent;
+                    return null;
+                }
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+            }
+            int posicionFinal = parametros.Count - 1;
+            currentEnvironment.SetVariable(parameters[posicionFinal].Item1, structVar.Value, structVar.Type, structVar.Mutable, true);
+            Visit(body);            
+
+        }
+        currentEnvironment = environment.Parent;
+
+        return null;
     }
 
     public override object VisitReturnStmt(gramaticaParser.ReturnStmtContext context)
