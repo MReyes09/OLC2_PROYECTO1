@@ -93,7 +93,7 @@ func main() {
 
 	// 3. Asignación a propiedades de tipos primitivos (2 puntos)
 	fmt.Println("\n==== Asignación a propiedades de tipos primitivos ====")
-	puntosAsignacionPrimitivos := 0
+	puntosAsignacionPrimitivos := 0	
 
 	fmt.Println("Asignación directa:")
 	persona1.Nombre = "María"

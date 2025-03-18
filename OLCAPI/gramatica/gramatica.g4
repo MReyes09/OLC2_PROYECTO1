@@ -101,7 +101,7 @@ varAsign: ID_VARIABLE '=' expr          # varExpr
     | ID_VARIABLE op =('+='|'-=') expr  # varAdd    
     | ID_VARIABLE op = ('++'|'--')      # varInc
     | ID_VARIABLE ('[' expr ']')+ '=' expr # ArrayAccess
-    | ID_VARIABLE '.' ID_VARIABLE '=' expr # StructAccessAsign
+    | ID_VARIABLE ('.' ID_VARIABLE)+ '=' expr # StructAccessAsign
 ;
 
 expr: '-' expr                                                # Negate
@@ -130,7 +130,7 @@ expr: '-' expr                                                # Negate
     | 'strconv.ParseFloat(' expr ')'                        # floatToString
     | 'reflect.TypeOf(' expr ')'                            # reflectType
     //Acceso a estructuras
-    | ID_VARIABLE '.' ID_VARIABLE ';'?                           # StructAccess 
+    | ID_VARIABLE ('.' ID_VARIABLE)+ ';'?                   # StructAccess 
     | varCallStatement                                      # CallFunctionValue
 ;
 

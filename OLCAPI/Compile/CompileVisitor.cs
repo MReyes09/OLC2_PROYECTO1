@@ -54,12 +54,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else if( value is Dictionary<string, Symbol> dict )
             {
-                output += $"{nombreStruct}"+"{ ";
-                foreach (var item in dict)
-                {
-                    output += item.Key + " : " + item.Value.Value + ", ";
-                }
-                output += " }";
+                output += getStructAnidado(dict, "", 1);
                 continue;
             }
 
@@ -547,52 +542,152 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     // ----------------------------- ACCESO A STRUCT -----------------------------
     public override object VisitStructAccess(gramaticaParser.StructAccessContext context)
     {
-        string idStruct = context.ID_VARIABLE(0).GetText();
-        string idVar = context.ID_VARIABLE(1).GetText();
-        // Variables encontradas
+        Symbol varStruct = null;
+        Dictionary<string, Symbol> datosStruct = null;
+        bool first = true;
+        for( int i = 0; i < context.ID_VARIABLE().Length; i++ )
+        {
+            string idStruct = context.ID_VARIABLE(i).GetText();
+            string idVar = context.ID_VARIABLE(i+1).GetText();
+            if( first )
+            {
+                first = false;
+                varStruct = currentEnvironment.GetVariable(idStruct);
+                if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
+                {
+                    output += $"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.\n";
+                    return null;
+                }
+                datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
+                if( datosStruct.ContainsKey(idVar))
+                {
+                    if( i + 1 == context.ID_VARIABLE().Length - 1 )
+                    {
+                        return datosStruct[idVar].Value;
+                    }
+                    else
+                    {
+                        varStruct = datosStruct[idVar];
+                        if( varStruct.Value is Dictionary<string, Symbol> newDictionary)
+                        {
+                            datosStruct = newDictionary;
+                        }
+                        else
+                        {
+                            output += $"Error: strucs anidados, la variable {idVar} no es un struct.\n";
+                            return null;
+                        }
+                    }
+                }
+                else
+                {
+                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+                    return null;
+                }
+            }
+            else
+            {
+                if( datosStruct.ContainsKey(idVar) )
+                {
+                    if( i + 1 == context.ID_VARIABLE().Length - 1 )
+                    {
+                        //Console.WriteLine($"valor previo: {datosStruct[idVar].Value}");
+                        return datosStruct[idVar].Value;
+                    }
+                    varStruct = datosStruct[idVar];
+                    if( varStruct.Value is Dictionary<string, Symbol> newDictionary)
+                    {
+                        datosStruct = newDictionary;
+                    }
+                    else
+                    {
+                        output += $"Error: la variable {idVar} no es un struct.\n";
+                        return null;
+                    }
+                }else
+                {
+                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+                }
+            }
 
-        Symbol varStruct = currentEnvironment.GetVariable(idStruct);
-        if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
-        {
-            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-            return null;
         }
-        Dictionary<string, Symbol> datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
-        if(  datosStruct.ContainsKey(idVar) )
-        {
-            return datosStruct[idVar].Value;
-        }
-        else
-        {
-            output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
-            return null;
-        }
+        return null;
     }
 
     public override object VisitStructAccessAsign(gramaticaParser.StructAccessAsignContext context)
     {
-        string idStruct = context.ID_VARIABLE(0).GetText();
-        string idVar = context.ID_VARIABLE(1).GetText();
-        // Variables encontradas
+        Symbol varStruct = null;
+        Dictionary<string, Symbol> datosStruct = null;
+        bool first = true;
+        for( int i = 0; i < context.ID_VARIABLE().Length; i++ )
+        {
+            string idStruct = context.ID_VARIABLE(i).GetText();
+            string idVar = context.ID_VARIABLE(i+1).GetText();
+            if( first )
+            {
+                first = false;
+                varStruct = currentEnvironment.GetVariable(idStruct);
+                if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
+                {
+                    output += $"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.\n";
+                    return null;
+                }
+                datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
+                if( datosStruct.ContainsKey(idVar))
+                {
+                    if( i + 1 == context.ID_VARIABLE().Length - 1 )
+                    {
+                        datosStruct[idVar].Value = Visit(context.expr());
+                        return null;
+                    }
+                    else
+                    {
+                        varStruct = datosStruct[idVar];
+                        if( varStruct.Value is Dictionary<string, Symbol> newDictionary)
+                        {
+                            datosStruct = newDictionary;
+                        }
+                        else
+                        {
+                            output += $"Error: strucs anidados, la variable {idVar} no es un struct.\n";
+                            return null;
+                        }
+                    }
+                }
+                else
+                {
+                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+                    return null;
+                }
+            }
+            else
+            {
+                if( datosStruct.ContainsKey(idVar) )
+                {
+                    if( i + 1 == context.ID_VARIABLE().Length - 1 )
+                    {
+                        //Console.WriteLine($"valor previo: {datosStruct[idVar].Value}");
+                        datosStruct[idVar].Value = Visit(context.expr());
+                        return null;
+                    }
+                    varStruct = datosStruct[idVar];
+                    if( varStruct.Value is Dictionary<string, Symbol> newDictionary)
+                    {
+                        datosStruct = newDictionary;
+                    }
+                    else
+                    {
+                        output += $"Error: la variable {idVar} no es un struct.\n";
+                        return null;
+                    }
+                }else
+                {
+                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+                }
+            }
 
-        Symbol varStruct = currentEnvironment.GetVariable(idStruct);
-        if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
-        {
-            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-            return null;
         }
-        Dictionary<string, Symbol> datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
-        if(  datosStruct.ContainsKey(idVar) )
-        {
-            datosStruct[idVar].Value = Visit(context.expr());
-            return null;
-        }
-        else
-        {
-            output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
-            return null;
-        }
-        
+        return null;
     }
     // ----------------------------- VARIABLES -----------------------------
     // ----------------------------- ASIGNACIONES -----------------------------
@@ -1066,6 +1161,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 output += $"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.\n";
                 return null;
             }
+            var expVisit = Visit(context.expr(i-2));
+            if( expVisit.Equals("nil") )
+            {
+                copiaDeep[context.ID_VARIABLE(i).GetText()].Value = "nil";
+                continue;
+            }
+
             if( IsValidType( Visit(context.expr(i-2)), varBaseStruct.Type) )
             {
                 copiaDeep[context.ID_VARIABLE(i).GetText()].Value = Visit(context.expr(i-2));
@@ -1467,7 +1569,6 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return "continue";
     }
 
-
     //  ---------------------------------------------------- FUNCIONES ----------------------------------------------------
     public override object VisitFunctionStmt(gramaticaParser.FunctionStmtContext context)
     {
@@ -1787,4 +1888,31 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         
         return cadena;
     }
+
+    private string getStructAnidado(Dictionary<string, Symbol> dic, string cadena, int numTabs){
+        cadena += "{\n";
+        foreach(var item in dic)
+        {
+            for(int i = 0; i < numTabs; i++)
+            {
+                cadena += "\t";
+            }
+            if( item.Value.Value is Dictionary<string, Symbol> newDic)
+            {
+                cadena += $"{item.Key}: ";
+                cadena = getStructAnidado(newDic, cadena, numTabs + 1);
+            }
+            else
+            {
+                cadena += $"{item.Key}: {item.Value.Value}\n";
+            }
+        }
+        for(int i = 0; i < numTabs - 1; i++)
+        {
+            cadena += "\t";
+        }
+        cadena += "}\n";
+        return cadena;
+    }
+
 }
