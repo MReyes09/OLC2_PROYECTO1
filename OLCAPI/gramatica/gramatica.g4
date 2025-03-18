@@ -89,10 +89,11 @@ contenidoSlice: expr (',' expr)*                                # SliceContenido
     | '{' contenidoSlice '}' (',' ('{' contenidoSlice '}')?)*      # SliceContenidoSlice
 ;
 // ----------------- Declaracion de estructuras -----------------
-varDclStruct: 'type' 'struct' ID_VARIABLE '{'( ID_VARIABLE type';'?)+'}'   # DeclStructData
+varDclStruct: 'type'? 'struct'? ID_VARIABLE 'struct'? '{'( ID_VARIABLE type';'?)+'}'   # DeclStructData
 ;
 
 varStructDcl: ID_VARIABLE ID_VARIABLE '=' '{' ID_VARIABLE ':' expr (',' ID_VARIABLE ':' expr)+ '}'  # StructVarType
+    | ID_VARIABLE ':=' ID_VARIABLE '{' ID_VARIABLE ':' expr (',' (ID_VARIABLE ':' expr)?)+ '}'  # StructVarTypeInference
 ;
 
 // ----------------- Asignacion de variables -----------------
@@ -116,6 +117,7 @@ expr: '-' expr                                                # Negate
     | BOOL                                                  # Boolean
     | ID_VARIABLE                                           # Identifier
     | CHAR                                                  # Char
+    | 'nil'                                                 # Nil    
     | '(' expr ')'                                          # Parens
     //Acceso a arreglos
     | ID_VARIABLE ('[' expr ']')+                           # ArrayAccessSimple
@@ -141,6 +143,7 @@ type: 'int'
     | 'bool' 
     | 'rune'
     | 'struct'
+    | ID_VARIABLE
 ;
 
 break: 'break' ';'?

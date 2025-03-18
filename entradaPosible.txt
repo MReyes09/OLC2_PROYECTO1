@@ -1,221 +1,263 @@
 
+// Declaración de struct simple
+type Persona struct {
+	Nombre   string
+	Edad     int
+	Estatura float64
+	Activo   bool
+}
+
+// Declaración de struct con campos anidados
+type Empleado struct {
+	DatosPersonales Persona
+	ID              string
+	Departamento    string
+	Salario         float64
+}
+
+// Declaración de struct para nodo de lista enlazada
+type Nodo struct {
+	Nombre    string
+	Valor     int
+	Siguiente Nodo
+}
+
+// Método para Persona: Saludar
+func (p Persona) Saludar() string {
+	return "Hola, mi nombre es " + p.Nombre
+}
+
+// Método para Nodo: ObtenerNombre
+func (n Nodo) ObtenerNombre() string {
+	return n.Nombre
+}
+
+// Método para Nodo: CambiarValor
+func (n Nodo) CambiarValor(nuevoValor int) {
+	n.Valor = nuevoValor
+}
+
+// Método para Nodo: ImprimirNombre
+func (n Nodo) ImprimirNombre() {
+	fmt.Println("Nombre del nodo:", n.Nombre)
+}
+
+// Método para Nodo: ObtenerSiguienteNombre
+func (n Nodo) ObtenerSiguienteNombre() string {
+	if n.Siguiente == nil {
+		return "No hay siguiente nodo"
+	}
+	return n.Siguiente.Nombre
+}
+
 func main() {
 	puntos := 0
 
-	fmt.Println("=== Archivo de prueba de slices ===")
+	fmt.Println("=== Archivo de prueba de structs ===")
 
-	// 1. Creación de slices (3 puntos)
-	fmt.Println("==== Creación de slices ====")
-	puntosCreacion := 0
+	// 1. Declaración (1 punto)
+	fmt.Println("==== Declaración ====")
+	puntosDeclaracion := 0
 
-	fmt.Println("Creación con literales:")
-	numeros := []int{1, 2, 3, 4, 5}
+	fmt.Println("Declaración de structs:")
+	fmt.Println("type Persona struct {")
+	fmt.Println("    Nombre   string")
+	fmt.Println("    Edad     int")
+	fmt.Println("    Estatura float64")
+	fmt.Println("    Activo   bool")
+	fmt.Println("}")
+
+	fmt.Println("\ntype Nodo struct {")
+	fmt.Println("    Nombre    string")
+	fmt.Println("    Valor     int")
+	fmt.Println("    Siguiente Nodo")
+	fmt.Println("}")
+
+	// Verificación manual
+	puntosDeclaracion = puntosDeclaracion + 1
+
+	// 2. Instanciación (2 puntos)
+	fmt.Println("\n==== Instanciación ====")
+	puntosInstanciacion := 0
+
+	fmt.Println("Instanciación con valores iniciales:")
+	persona1 := Persona{
+		Nombre:   "Juan",
+		Edad:     30,
+		Estatura: 1.75,
+		Activo:   true,
+	}
 	fmt.Println("###Validacion Manual")
-	fmt.Println("numeros:", numeros)
-	fmt.Println("OK Creación con literales: correcto")
-	puntosCreacion = puntosCreacion + 3
+	fmt.Println("persona1:", persona1)
+	puntosInstanciacion = puntosInstanciacion + 2
 
-	// 2. Acceso de Elementos (3 puntos)
-	fmt.Println("\n==== Acceso de Elementos ====")
-	puntosAcceso := 0
+	// 3. Asignación a propiedades de tipos primitivos (2 puntos)
+	fmt.Println("\n==== Asignación a propiedades de tipos primitivos ====")
+	puntosAsignacionPrimitivos := 0
 
-	fmt.Println("Acceso por índice:")
-	primerElemento := numeros[0]
-	fmt.Println("Primer elemento:", primerElemento)
+	fmt.Println("Asignación directa:")
+	persona1.Nombre = "María"
+	persona1.Edad = 25
+	persona1.Estatura = 1.65
+	persona1.Activo = true
 
-	if primerElemento == 1 {
-		puntosAcceso = puntosAcceso + 1
-		fmt.Println("OK Acceso por índice: correcto")
+	if persona1.Nombre == "María" && persona1.Edad == 25 {
+		puntosAsignacionPrimitivos = puntosAsignacionPrimitivos + 2
+		fmt.Println("OK Asignación directa: correcto")
 	} else {
-		fmt.Println("X Acceso por índice: incorrecto")
+		fmt.Println("X Asignación directa: incorrecto")
 	}
 
-	fmt.Println("Acceso fuera de rango:")
-	// fmt.Println(numeros[5]) // ! ERROR: Comentar esta línea para que el programa compile
-	fmt.Println("OK Acceso fuera de rango: correcto")
+	// 4. Acceso a propiedades de tipos primitivos (2 puntos)
+	fmt.Println("\n==== Acceso a propiedades de tipos primitivos ====")
+	puntosAccesoPrimitivos := 0
 
-	fmt.Println("\nModificación de elementos:")
-	numeros[0] = 10
-	fmt.Println("numeros después de modificar:", numeros)
+	fmt.Println("Acceso directo:")
+	nombrePersona1 := persona1.Nombre
+	edadPersona1 := persona1.Edad
+	fmt.Println("Nombre de persona1:", nombrePersona1)
+	fmt.Println("Edad de persona1:", edadPersona1)
 
-	if numeros[0] == 10 {
-		puntosAcceso = puntosAcceso + 2
-		fmt.Println("OK Modificación de elementos: correcto")
+	if nombrePersona1 == "María" && edadPersona1 == 25 {
+		puntosAccesoPrimitivos = puntosAccesoPrimitivos + 2
+		fmt.Println("OK Acceso directo: correcto")
 	} else {
-		fmt.Println("X Modificación de elementos: incorrecto")
+		fmt.Println("X Acceso directo: incorrecto")
 	}
 
-	// 3. Array Multidimensional (4 puntos)
-	fmt.Println("\n==== Array Multidimensional ====")
-	puntosMultidimensional := 0
+	// 5. Asignación a propiedades dentro de structs anidados (3 puntos)
+	fmt.Println("\n==== Asignación a propiedades dentro de structs anidados ====")
+	puntosAsignacionAnidados := 0
 
-	fmt.Println("Creación de matriz 2D con literales:")
-	matriz := [][]int{
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9},
+	fmt.Println("Creación de nodos enlazados:")
+	nodo1 := Nodo{
+		Nombre:    "Primero",
+		Valor:     10,
+		Siguiente: nil,
 	}
-	fmt.Println("matriz:")
+
+	nodo2 := Nodo{
+		Nombre:    "Segundo",
+		Valor:     20,
+		Siguiente: nil,
+	}
+
+	// Enlazar nodo1 con nodo2
+	nodo1.Siguiente = nodo2
+
+	// Crear nodo3 y enlazarlo con nodo2
+	nodo3 := Nodo{
+		Nombre:    "Tercero",
+		Valor:     30,
+		Siguiente: nil,
+	}
+
+	nodo2.Siguiente = nodo3
+
+	// Modificar el valor del nodo2 a través de nodo1
+	nodo1.Siguiente.Valor = 25
+
+	// Modificar el nombre del nodo3 a través de nodo1
+	nodo1.Siguiente.Siguiente.Nombre = "Tercero Modificado"
+
+	// Aqui se asume que toda la asignacion fue correcta
+	puntosAsignacionAnidados = puntosAsignacionAnidados + 3
+
+	// 6. Acceso a propiedades dentro de structs anidados (3 puntos)
+	fmt.Println("\n==== Acceso a propiedades dentro de structs anidados ====")
+	puntosAccesoAnidados := 0
+
+	fmt.Println("Acceso a propiedades de nodos enlazados:")
+	nombreNodo1 := nodo1.Nombre
+	valorNodo2 := nodo1.Siguiente.Valor
+	nombreNodo3 := nodo1.Siguiente.Siguiente.Nombre
+
+	fmt.Println("Nombre del nodo1:", nombreNodo1)
+	fmt.Println("Valor del nodo2:", valorNodo2)
+	fmt.Println("Nombre del nodo3:", nombreNodo3)
+
+	// Verificar si hay un nodo después del nodo3
+	if nodo1.Siguiente.Siguiente.Siguiente == nil {
+		fmt.Println("No hay nodo después del nodo3")
+	} else {
+		fmt.Println("Hay un nodo después del nodo3")
+	}
+
+	if nombreNodo1 == "Primero" && valorNodo2 == 25 && nombreNodo3 == "Tercero Modificado" {
+		puntosAccesoAnidados = puntosAccesoAnidados + 3
+		fmt.Println("OK Acceso a propiedades anidadas: correcto")
+	} else {
+		fmt.Println("X Acceso a propiedades anidadas: incorrecto")
+	}
+
+	// 7. Funciones asociadas a structs (6 puntos)
+	fmt.Println("\n==== Funciones asociadas a structs ====")
+	puntosFuncionesStruct := 0
+
+	fmt.Println("Método para obtener nombre del nodo:")
+	nombreObtenido := nodo1.ObtenerNombre()
+	fmt.Println("Nombre obtenido:", nombreObtenido)
+
+	if nombreObtenido == "Primero" {
+		puntosFuncionesStruct = puntosFuncionesStruct + 1
+		fmt.Println("OK Método para obtener nombre: correcto")
+	} else {
+		fmt.Println("X Método para obtener nombre: incorrecto")
+	}
+
+	fmt.Println("\nMétodo para cambiar valor del nodo:")
+	nodo1.CambiarValor(15)
+
+	if nodo1.Valor == 15 {
+		puntosFuncionesStruct = puntosFuncionesStruct + 2
+		fmt.Println("OK Método para cambiar valor: correcto")
+	} else {
+		fmt.Println("X Método para cambiar valor: incorrecto")
+	}
+
+	fmt.Println("\nMétodo para imprimir nombre del nodo:")
 	fmt.Println("###Validacion Manual")
-	fmt.Println(matriz)
-	puntosMultidimensional = puntosMultidimensional + 2
+	nodo1.ImprimirNombre()
+	puntosFuncionesStruct = puntosFuncionesStruct + 1
 
-	fmt.Println("\nMatrices irregulares:")
-	matrizIrregular := [][]int{
-		{1, 2, 3, 4},
-		{5, 6},
-		{7, 8, 9},
-	}
-	fmt.Println("matrizIrregular:")
-	fmt.Println("###Validacion Manual")
-	fmt.Println(matrizIrregular)
-	puntosMultidimensional = puntosMultidimensional + 2
+	fmt.Println("\nMétodo para obtener nombre del siguiente nodo:")
+	nombreSiguiente := nodo1.ObtenerSiguienteNombre()
+	fmt.Println("Nombre del siguiente nodo:", nombreSiguiente)
 
-	// 4. Acceso Array Multidimensional (4 puntos)
-	fmt.Println("\n==== Acceso Array Multidimensional ====")
-	puntosAccesoMultidimensional := 0
+	nombreSiguienteDeNodo3 := nodo3.ObtenerSiguienteNombre()
+	fmt.Println("Nombre del siguiente nodo de nodo3:", nombreSiguienteDeNodo3)
 
-	fmt.Println("Acceso a elementos de matriz 2D:")
-	elemento11 := matriz[0][0]
-	elemento23 := matriz[1][2]
-	elemento33 := matriz[2][2]
-	fmt.Println("Elemento [0][0]:", elemento11)
-	fmt.Println("Elemento [1][2]:", elemento23)
-	fmt.Println("Elemento [2][2]:", elemento33)
-
-	if elemento11 == 1 && elemento23 == 6 && elemento33 == 9 {
-		puntosAccesoMultidimensional = puntosAccesoMultidimensional + 1
-		fmt.Println("OK Acceso a elementos de matriz 2D: correcto")
+	if nombreSiguiente == "Segundo" {
+		puntosFuncionesStruct = puntosFuncionesStruct + 1
+		fmt.Println("OK Método para obtener nombre del siguiente: correcto")
 	} else {
-		fmt.Println("X Acceso a elementos de matriz 2D: incorrecto")
+		fmt.Println("X Método para obtener nombre del siguiente: incorrecto")
 	}
 
-	fmt.Println("\nModificación de elementos en matriz 2D:")
-	matriz[0][0] = 100
-	matriz[1][1] = 500
-	matriz[2][2] = 900
-
-	if matriz[0][0] == 100 && matriz[1][1] == 500 && matriz[2][2] == 900 {
-		puntosAccesoMultidimensional = puntosAccesoMultidimensional + 1
-		fmt.Println("OK Modificación de elementos en matriz 2D: correcto")
+	if nombreSiguienteDeNodo3 == "No hay siguiente nodo" {
+		puntosFuncionesStruct = puntosFuncionesStruct + 1
+		fmt.Println("OK Método para obtener nombre del siguiente de nodo3: correcto")
 	} else {
-		fmt.Println("X Modificación de elementos en matriz 2D: incorrecto")
+		fmt.Println("X Método para obtener nombre del siguiente de nodo3: incorrecto")
 	}
-
-	fmt.Println("\nAcceso a filas completas:")
-	primeraFila := matriz[0]
-	fmt.Println("Primera fila de matriz:", primeraFila)
-
-	if primeraFila[0] == 100 && primeraFila[1] == 2 && primeraFila[2] == 3 {
-		puntosAccesoMultidimensional = puntosAccesoMultidimensional + 2
-		fmt.Println("OK Acceso a filas completas: correcto")
-	} else {
-		fmt.Println("X Acceso a filas completas: incorrecto")
-	}
-
-	// 5. Función slices.Index (1 punto)
-	fmt.Println("\n==== Función slices.Index ====")
-	puntosIndex := 0
-
-	fmt.Println("Búsqueda de elementos con slices.Index:")
-	numeros = []int{10, 20, 30, 40, 50}
-	indice1 := slices.Index(numeros, 30)
-	indice2 := slices.Index(numeros, 60) // No existe, debería retornar -1
-	fmt.Println("Índice de 30:", indice1)
-	fmt.Println("Índice de 60:", indice2)
-
-	if indice1 == 2 && indice2 == -1 {
-		puntosIndex = puntosIndex + 1
-		fmt.Println("OK slices.Index: correcto")
-	} else {
-		fmt.Println("X slices.Index: incorrecto")
-	}
-
-	// 6. Función Strings.Join (1 punto)
-	fmt.Println("\n==== Función Strings.Join ====")
-	puntosJoin := 0
-
-	fmt.Println("Unión de strings con strings.Join:")
-	palabras := []string{"Hola", "mundo", "desde", "Go"}
-	frase := strings.Join(palabras, " ")
-	fraseConComas := strings.Join(palabras, ", ")
-	fmt.Println("Frase con espacios:", frase)
-	fmt.Println("Frase con comas:", fraseConComas)
-
-	if frase == "Hola mundo desde Go" && fraseConComas == "Hola, mundo, desde, Go" {
-		puntosJoin = puntosJoin + 1
-		fmt.Println("OK strings.Join: correcto")
-	} else {
-		fmt.Println("X strings.Join: incorrecto")
-	}
-
-	// 7. Función len (1 punto)
-	fmt.Println("\n==== Función len ====")
-	puntosLen := 0
-
-	fmt.Println("Longitud de slices con len:")
-	longitud1 := len(numeros)
-	longitud2 := len(matrizIrregular)
-	longitud3 := len(matrizIrregular[1])
-
-	if longitud1 == 5 && longitud2 == 3 && longitud3 == 2 {
-		puntosLen = puntosLen + 1
-		fmt.Println("OK len: correcto")
-	} else {
-		fmt.Println("X len: incorrecto")
-	}
-
-	// 8. Función append (3 puntos)
-	fmt.Println("\n==== Función append ====")
-	puntosAppend := 0
-
-	fmt.Println("Agregar elementos con append:")
-	numeros = []int{1, 2, 3}
-	numeros = append(numeros, 4)
-	fmt.Println("numeros después de append(numeros, 4):", numeros)
-
-	if numeros[3] == 4 {
-		puntosAppend = puntosAppend + 1
-		fmt.Println("OK Agregar un elemento: correcto")
-	} else {
-		fmt.Println("X Agregar un elemento: incorrecto")
-	}
-
-	fmt.Println("\nAgregar un slice a otro con append:")
-	mtx1 := [][]int{
-		{1, 2, 3},
-		{4, 5, 6},
-		{7, 8, 9},
-	}
-
-	mtx1 = append(mtx1, numeros)
-	fmt.Println("mtx1 después de append(mtx1, numeros):")
-	fmt.Println("###Validacion Manual")
-	fmt.Println(mtx1)
-	puntosAppend = puntosAppend + 2
 
 	// Resumen de puntos
-	puntos = puntosCreacion + puntosAcceso + puntosMultidimensional +
-		puntosAccesoMultidimensional + puntosIndex + puntosJoin +
-		puntosLen + puntosAppend
-
-	fmt.Println("\n=== Errores ===")
-	fmt.Println("###Validacion Manual")
-	fmt.Println("Errores esperados ?/1")
+	puntos = puntosDeclaracion + puntosInstanciacion + puntosAsignacionPrimitivos +
+		puntosAccesoPrimitivos + puntosAsignacionAnidados + puntosAccesoAnidados +
+		puntosFuncionesStruct
 
 	fmt.Println("\n=== Tabla de Resultados ===")
-	fmt.Println("+----------------------------------+--------+-------+")
-	fmt.Println("| Característica                   | Puntos | Total |")
-	fmt.Println("+----------------------------------+--------+-------+")
-	fmt.Println("| Creación de slices               | ", puntosCreacion, "    | 3     |")
-	fmt.Println("| Acceso de Elementos              | ", puntosAcceso, "    | 3     |")
-	fmt.Println("| Array Multidimensional           | ", puntosMultidimensional, "    | 4     |")
-	fmt.Println("| Acceso Array Multidimensional    | ", puntosAccesoMultidimensional, "    | 4     |")
-	fmt.Println("| Función slices.Index             | ", puntosIndex, "    | 1     |")
-	fmt.Println("| Función Strings.Join             | ", puntosJoin, "    | 1     |")
-	fmt.Println("| Función len                      | ", puntosLen, "    | 1     |")
-	fmt.Println("| Función append                   | ", puntosAppend, "    | 3     |")
-	fmt.Println("+----------------------------------+--------+-------+")
-	fmt.Println("| TOTAL                            | ", puntos, "   | 20    |")
-	fmt.Println("+----------------------------------+--------+-------+")
+	fmt.Println("+------------------------------------------+--------+-------+")
+	fmt.Println("| Característica                           | Puntos | Total |")
+	fmt.Println("+------------------------------------------+--------+-------+")
+	fmt.Println("| Declaración                              | ", puntosDeclaracion, "    | 1     |")
+	fmt.Println("| Instanciación                            | ", puntosInstanciacion, "    | 2     |")
+	fmt.Println("| Asignación a propiedades primitivas      | ", puntosAsignacionPrimitivos, "    | 2     |")
+	fmt.Println("| Acceso a propiedades primitivas          | ", puntosAccesoPrimitivos, "    | 2     |")
+	fmt.Println("| Asignación a propiedades anidadas        | ", puntosAsignacionAnidados, "    | 3     |")
+	fmt.Println("| Acceso a propiedades anidadas            | ", puntosAccesoAnidados, "    | 3     |")
+	fmt.Println("| Funciones asociadas a structs            | ", puntosFuncionesStruct, "    | 6     |")
+	fmt.Println("+------------------------------------------+--------+-------+")
+	fmt.Println("| TOTAL                                    | ", puntos, "   | 19    |")
+	fmt.Println("+------------------------------------------+--------+-------+")
 }

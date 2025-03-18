@@ -130,6 +130,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return charText[0];
     }
 
+    public override object VisitNil(gramaticaParser.NilContext context)
+    {
+        return "nil";
+    }
+
     // ----------------------------- OPERADORES -----------------------------
     // VisitMulDiv
     public override object VisitMulDivModulo(gramaticaParser.MulDivModuloContext context)
@@ -943,6 +948,17 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
+                Symbol varStruct = currentEnvironment.GetVariable(context.type()[tipoVar].GetText());
+                if( varStruct is Symbol )
+                {
+                    VariableStruct.Add(variable.GetText(), varStruct);
+                    continue;
+                }
+                if( varStruct == null &&  context.type()[tipoVar].GetText().Equals(id) )
+                {
+                    VariableStruct.Add(variable.GetText(), new Symbol(null, SymbolType.STRUCT, true));
+                    continue;
+                }
                 SymbolType symbolType = Enum.Parse<SymbolType>(context.type()[tipoVar].GetText(), true);
                 switch( symbolType )
                 {
@@ -961,8 +977,9 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     case SymbolType.RUNE:
                         VariableStruct.Add(variable.GetText(), new Symbol('\0', symbolType, false));
                         break;
-                    //case SymbolType.Struct: falta caso struct
-                    //default: Error de tipo en struct
+                    default:
+                        output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+                        return null;
                 }
                 tipoVar++;
             }
@@ -1023,6 +1040,45 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         return null;
     }
 
+    public override object VisitStructVarTypeInference(gramaticaParser.StructVarTypeInferenceContext context)
+    {
+        var idStruct = context.ID_VARIABLE(1).GetText();
+        Symbol baseStruct = currentEnvironment.GetVariable(idStruct);
+
+        if( baseStruct != null && baseStruct.Type != SymbolType.STRUCT )
+        {
+            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
+            return null;
+        }
+        Dictionary<string, Symbol> datosStructBase = (Dictionary<string, Symbol>)baseStruct.Value;
+        if( datosStructBase.Count() != context.ID_VARIABLE().Length - 2 )
+        {
+            output += $"Error al crear una variable de tipo Struct, se esperaban {datosStructBase.Count} y se recibieron {context.ID_VARIABLE().Length - 2}\n";
+            return null;
+        }
+
+        Dictionary<string, Symbol> copiaDeep = datosStructBase.ToDictionary(entry => entry.Key, entry =>  new Symbol(entry.Value.Value, entry.Value.Type, entry.Value.Mutable));
+        for( int i = 2; i < context.ID_VARIABLE().Length; i++ )
+        {
+            Symbol varBaseStruct = copiaDeep[context.ID_VARIABLE(i).GetText()];
+            if( varBaseStruct == null )
+            {
+                output += $"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.\n";
+                return null;
+            }
+            if( IsValidType( Visit(context.expr(i-2)), varBaseStruct.Type) )
+            {
+                copiaDeep[context.ID_VARIABLE(i).GetText()].Value = Visit(context.expr(i-2));
+            }
+            else
+            {
+                output += $"Error al crear una variable de tipo Struct, los tipos no son compatibles.\n";
+                return null;
+            }
+        }
+        currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), copiaDeep, SymbolType.STRUCT, true, true);
+        return null;
+    }
     //  ---------------------------------------------------- IF ----------------------------------------------------
     // VisitIfStmt
     public override object VisitIfStmt(gramaticaParser.IfStmtContext context)
