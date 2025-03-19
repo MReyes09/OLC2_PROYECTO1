@@ -111,6 +111,8 @@ namespace api.Controllers
                         visitor.Visit(stmtMain);
                     }
 
+                    List<Tuple<string, Symbol, int, int>> tableSymbol = visitor.currentEnvironment.tableSymbol;
+                    SymbolTable.GenerateHtmlReport(tableSymbol);
                     return Ok(new { result = visitor.output });
                 }
                 catch (ParseCanceledException ex)

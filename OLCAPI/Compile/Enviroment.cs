@@ -1,3 +1,4 @@
+
 public enum SymbolType
 {
     INT,
@@ -28,6 +29,7 @@ public class Symbol
 
 public class Environment
 {
+    public List<Tuple<string, Symbol, int, int>> tableSymbol = new List<Tuple<string, Symbol, int, int>>();
     public Dictionary<string, Symbol> Variables = new Dictionary<string, Symbol>();
     private Dictionary<string,  MiFunct> functions = new();
     public Environment Parent { get; set; }
@@ -54,29 +56,32 @@ public class Environment
         }
     }
 
-    public void SetVariable(string id, object value, SymbolType type, bool mutable, bool declaracion)
+    public void SetVariable(string id, object value, SymbolType type, bool mutable, bool declaracion, Antlr4.Runtime.IToken token)
     {
         if (Variables.ContainsKey(id)){
             // Si la variable ya existe en este entorno, actualizarla
             Variables[id].Value = value;
+            tableSymbol.Add(new Tuple<string, Symbol, int, int>(id, new Symbol(value, type, mutable), token.Line, token.Column));
 
         }else if( !Variables.ContainsKey(id) && declaracion ){
              // Si es una declaración y no existe en este entorno, agregarla
             if (value is List<object>){ // Manejo de slices (listas dinámicas){
                 Variables.Add(id, new Symbol((List<object>)value, type, mutable));
+                tableSymbol.Add(new Tuple<string, Symbol, int, int>(id, new Symbol(value, type, mutable), token.Line, token.Column));
             }else{
                 Variables.Add(id, new Symbol(value, type, mutable));
+                tableSymbol.Add(new Tuple<string, Symbol, int, int>(id, new Symbol(value, type, mutable), token.Line, token.Column));
             }   
         }else if (Parent != null && Parent.GetVariable(id) != null)
         {
             // Si la variable está en un entorno superior, modificarla en el entorno correcto
-            Parent.SetVariable(id, value, type, mutable, false);
+            Parent.SetVariable(id, value, type, mutable, false, token);
         }else{
-            //throw new Exception("Variable " + id + " not found");
+            //throw new ErrorSemantico("Variable " + id + " not found");
         }
     }
 
-    public void SetFunciones(string id, List<Tuple<string, Symbol>> parametros, gramaticaParser.BlockContext body, SymbolType typeRet)
+    public void SetFunciones(string id, List<Tuple<string, Symbol>> parametros, gramaticaParser.BlockContext body, SymbolType typeRet, Antlr4.Runtime.IToken token)
     {
         var funcion = new MiFunct(parametros, body, typeRet);  // Crea el objeto MiFunct
         if (functions.ContainsKey(id))

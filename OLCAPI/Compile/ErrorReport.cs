@@ -19,6 +19,7 @@ public class ErrorSemantico : Exception
             {
                 return mensaje;
             }
+            ErrorReportGenerator.GenerateHtmlReport(mensaje, token.Line, token.Column);
             return mensaje + " en línea " + token.Line + ", columna " + token.Column;
         }
     }
@@ -30,11 +31,11 @@ public class LexicalErrorListener : BaseErrorListener, IAntlrErrorListener<int>
 
     public void SyntaxError(TextWriter output, IRecognizer recognizer, int offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
     {
+        ErrorReportGenerator.GenerateHtmlReport(msg, line, charPositionInLine);
         string errorMessage = $"Error léxico en línea {line}, columna {charPositionInLine}: {msg}";
         Errors.Add(errorMessage);
     }
 }
-
 
 public class SyntaxErrorListener : BaseErrorListener
 {
@@ -42,6 +43,7 @@ public class SyntaxErrorListener : BaseErrorListener
 
     public override void SyntaxError(TextWriter output, IRecognizer recognizer, IToken offendingSymbol, int line, int charPositionInLine, string msg, RecognitionException e)
     {
+        ErrorReportGenerator.GenerateHtmlReport(msg, line, charPositionInLine);
         string errorMessage = $"Error sintáctico en línea {line}, columna {charPositionInLine}: {msg}";
         Errors.Add(errorMessage);
     }

@@ -4,7 +4,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 {
     public string output = "";
     private object conditionExpr;
-    private Environment currentEnvironment = new Environment();
+    public Environment currentEnvironment = new Environment();
     private Dictionary<string, List<string>> Struct_Relational = new Dictionary<string, List<string>>();
     private Dictionary<string, List<string>> structFunc_Relational = new Dictionary<string, List<string>>();
     // VisitProgram
@@ -702,16 +702,18 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         SymbolType type = currentEnvironment.GetVariable(id).Type;
         bool mutabilidad = currentEnvironment.GetVariable(id).Mutable;
 
+        var context_Start = context.Start;
+
         if (value is null)
         {
-            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, el valor es nulo.", context.Start);
+            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, el valor es nulo.", context_Start);
         }
 
         if (value is List<Object> tempList)
         {
             if (IsValidType(tempList[0], type) || value is List<Object>)
             {
-                currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
+                currentEnvironment.SetVariable(id, value, type, mutabilidad, false, context_Start);
                 return null;
             }
             else
@@ -724,13 +726,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         {
             if (mutabilidad)
             {
-                currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
+                currentEnvironment.SetVariable(id, value, type, mutabilidad, false, context_Start);
                 return null;
             }
             throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
         }
 
-        currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
+        currentEnvironment.SetVariable(id, value, type, mutabilidad, false, context_Start);
 
         return null;
     }
@@ -742,16 +744,17 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         object value = Visit(context.expr());
 
         SymbolType type = currentEnvironment.GetVariable(id).Type;
+        var context_Start = context.Start;
 
         if (value is int && type == SymbolType.FLOAT64)
         {
             switch (context.op.Text)
             {
                 case "+=":
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                     break;
                 case "-=":
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                     break;
             }
             return null;
@@ -764,10 +767,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 switch (context.op.Text)
                 {
                     case "+=":
-                        currentEnvironment.SetVariable(id, (string)currentEnvironment.GetVariable(id).Value + (string)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                        currentEnvironment.SetVariable(id, (string)currentEnvironment.GetVariable(id).Value + (string)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                         break;
                     case "-=":
-                        throw new ErrorSemantico("Error-semántico: al operar -= no se pueden operar strings.", context.Start);
+                        throw new ErrorSemantico("Error-semántico: al operar -= no se pueden operar strings.", context_Start);
                 }
                 return null;
             }
@@ -776,10 +779,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 switch (context.op.Text)
                 {
                     case "+=":
-                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + (int)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                         break;
                     case "-=":
-                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                        currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - (int)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                         break;
                 }
                 return null;
@@ -789,22 +792,22 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 switch (context.op.Text)
                 {
                     case "+=":
-                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (double)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + (double)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                         break;
                     case "-=":
-                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (double)value, type, currentEnvironment.GetVariable(id).Mutable, false);
+                        currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - (double)value, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                         break;
                 }
                 return null;
             }
             else
             {
-                throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
+                throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context_Start);
             }
         }
         else
         {
-            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
+            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context_Start);
         }
     }
 
@@ -812,10 +815,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
     {
         string id = context.ID_VARIABLE().GetText();
         SymbolType type = currentEnvironment.GetVariable(id).Type;
+        var context_Start = context.Start;
 
         if (type != SymbolType.INT && type != SymbolType.FLOAT64)
         {
-            throw new ErrorSemantico("Error-semántico: el tipo de variable no acepta operador ++.", context.Start);
+            throw new ErrorSemantico("Error-semántico: el tipo de variable no acepta operador ++.", context_Start);
         }
 
         switch (context.op.Text)
@@ -823,21 +827,21 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             case "++":
                 if (type == SymbolType.INT)
                 {
-                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable, false);
+                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                 }
                 else
                 {
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable, false);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value + 1, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                 }
                 break;
             case "--":
                 if (type == SymbolType.INT)
                 {
-                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable, false);
+                    currentEnvironment.SetVariable(id, (int)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                 }
                 else
                 {
-                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable, false);
+                    currentEnvironment.SetVariable(id, (double)currentEnvironment.GetVariable(id).Value - 1, type, currentEnvironment.GetVariable(id).Mutable, false, context_Start);
                 }
                 break;
         }
@@ -879,7 +883,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
         }
 
-        currentEnvironment.SetVariable(id, value, symbolType, false, true);
+        currentEnvironment.SetVariable(id, value, symbolType, false, true, context.Start);
         return null;
     }
 
@@ -892,19 +896,19 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         switch (symbolType)
         {
             case SymbolType.INT:
-                currentEnvironment.SetVariable(id, 0, symbolType, false, true);
+                currentEnvironment.SetVariable(id, 0, symbolType, false, true, context.Start);
                 break;
             case SymbolType.FLOAT64:
-                currentEnvironment.SetVariable(id, 0.0, symbolType, false, true);
+                currentEnvironment.SetVariable(id, 0.0, symbolType, false, true, context.Start);
                 break;
             case SymbolType.STRING:
-                currentEnvironment.SetVariable(id, "", symbolType, false, true);
+                currentEnvironment.SetVariable(id, "", symbolType, false, true, context.Start);
                 break;
             case SymbolType.BOOL:
-                currentEnvironment.SetVariable(id, false, symbolType, false, true);
+                currentEnvironment.SetVariable(id, false, symbolType, false, true, context.Start);
                 break;
             case SymbolType.RUNE:
-                currentEnvironment.SetVariable(id, '\0', symbolType, false, true);
+                currentEnvironment.SetVariable(id, '\0', symbolType, false, true, context.Start);
                 break;
         }
         return null;
@@ -919,26 +923,26 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         if( value is List<object> tempList){
             string dataType = GetDimensionSlice(tempList, "", true);
             SymbolType symbolType = Enum.Parse<SymbolType>(dataType, true);
-            currentEnvironment.SetVariable(id, value, symbolType, false, true);
+            currentEnvironment.SetVariable(id, value, symbolType, false, true, context.Start);
             return null;
         }
 
         switch (value)
         {
             case int intValue:
-                currentEnvironment.SetVariable(id, intValue, SymbolType.INT, true, true);
+                currentEnvironment.SetVariable(id, intValue, SymbolType.INT, true, true, context.Start);
                 break;
             case double doubleValue:
-                currentEnvironment.SetVariable(id, doubleValue, SymbolType.FLOAT64, true, true);
+                currentEnvironment.SetVariable(id, doubleValue, SymbolType.FLOAT64, true, true, context.Start);
                 break;
             case string stringValue:
-                currentEnvironment.SetVariable(id, stringValue, SymbolType.STRING, true, true);
+                currentEnvironment.SetVariable(id, stringValue, SymbolType.STRING, true, true, context.Start);
                 break;
             case bool boolValue:
-                currentEnvironment.SetVariable(id, boolValue, SymbolType.BOOL, true, true);
+                currentEnvironment.SetVariable(id, boolValue, SymbolType.BOOL, true, true, context.Start);
                 break;
             case char charValue:
-                currentEnvironment.SetVariable(id, charValue, SymbolType.RUNE, true, true);
+                currentEnvironment.SetVariable(id, charValue, SymbolType.RUNE, true, true, context.Start);
                 break;
         }
         return null;
@@ -974,7 +978,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
 
         var sliceFinal = Visit(context.contenidoSlice());
-        currentEnvironment.SetVariable(id, sliceFinal, typo, false, true);
+        currentEnvironment.SetVariable(id, sliceFinal, typo, false, true, context.Start);
 
         return null;
     }
@@ -984,7 +988,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         var id = context.ID_VARIABLE().GetText();
         var type = context.type().GetText();
         SymbolType symbolType = Enum.Parse<SymbolType>(type, true);
-        currentEnvironment.SetVariable(id, new List<object>(), symbolType, false, true);
+        currentEnvironment.SetVariable(id, new List<object>(), symbolType, false, true, context.Start);
 
         return null;
     }
@@ -1068,7 +1072,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 tipoVar++;
             }
         }
-        currentEnvironment.SetVariable(id, VariableStruct, SymbolType.STRUCT, false, true);
+        currentEnvironment.SetVariable(id, VariableStruct, SymbolType.STRUCT, false, true, context.Start);
         return null;
     }
 
@@ -1117,7 +1121,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 throw new ErrorSemantico("Error al crear una variable de tipo Struct, los tipos no son compatibles.", context.Start);
             }
         }
-        currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), copiaDeep, SymbolType.STRUCT, false, true);
+        currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), copiaDeep, SymbolType.STRUCT, false, true, context.Start);
         if( Struct_Relational.ContainsKey(idStruct) )
         {
             Struct_Relational[idStruct].Add(context.ID_VARIABLE(1).GetText());
@@ -1168,7 +1172,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 throw new ErrorSemantico("Error al crear una variable de tipo Struct, los tipos no son compatibles.", context.Start);
             }
         }
-        currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), copiaDeep, SymbolType.STRUCT, true, true);
+        currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), copiaDeep, SymbolType.STRUCT, true, true, context.Start);
         if( Struct_Relational.ContainsKey(idStruct) )
         {
             Struct_Relational[idStruct].Add(context.ID_VARIABLE(0).GetText());
@@ -1478,24 +1482,24 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
 
         List<object> slice = (List<object>)variableSlice.Value;
-        currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), 0, SymbolType.INT, false, true);
+        currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), 0, SymbolType.INT, false, true, context.Start);
 
         switch( variableSlice.Type )
         {
             case SymbolType.INT:
-                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), 0, SymbolType.INT, false, true);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), 0, SymbolType.INT, false, true, context.Start);
                 break;
             case SymbolType.FLOAT64:
-                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), 0.00, SymbolType.FLOAT64, false, true);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), 0.00, SymbolType.FLOAT64, false, true, context.Start);
                 break;
             case SymbolType.STRING:
-                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), "", SymbolType.STRING, false, true);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), "", SymbolType.STRING, false, true, context.Start);
                 break;
             case SymbolType.BOOL:
-                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), false, SymbolType.BOOL, false, true);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), false, SymbolType.BOOL, false, true, context.Start);
                 break;
             case SymbolType.RUNE:
-                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), '\0', SymbolType.RUNE, false, true);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), '\0', SymbolType.RUNE, false, true, context.Start);
                 break;
         }
 
@@ -1504,8 +1508,8 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         for( int i = 0; i < slice.Count; i++ )
         {
-            currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false);
-            currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false);
+            currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false, context.Start);
+            currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false, context.Start);
             object result = Visit(context.block());
             if ( result is string && result.Equals("break") )
             {
@@ -1513,8 +1517,8 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else if ( result is string && result.Equals("continue") )
             {
-                currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false);
-                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), i, SymbolType.INT, false, false, context.Start);
+                currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), slice[i], variableSlice.Type, false, false, context.Start);
                 continue;
             }
             else if(result != null)
@@ -1613,7 +1617,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         // Bloque de la funcion
         var body = context.block();        
-        currentEnvironment.SetFunciones(id, parametros, body, tipoRetorno);
+        currentEnvironment.SetFunciones(id, parametros, body, tipoRetorno, context.Start);
         return null;
     }
 
@@ -1687,7 +1691,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 {
                     throw new ErrorSemantico($"Error-semántico: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
-                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true, context.Start);
             }
             object valRet = Visit(body);
 
@@ -1707,7 +1711,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 {
                     throw new ErrorSemantico($"Error-semántico: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
-                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true, context.Start);
             }
             Visit(body);
         }
@@ -1778,7 +1782,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         parametros.Add(new Tuple<string, Symbol>(idVar, structVar));
         var body = context.block();
-        currentEnvironment.SetFunciones(nombreFunc, parametros, body, tipoRetorno);
+        currentEnvironment.SetFunciones(nombreFunc, parametros, body, tipoRetorno, context.Start);
         
         if( structFunc_Relational.ContainsKey(idStruct) )
         {
@@ -1907,10 +1911,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 {
                     throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
-                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true, context.Start);
             }
             int posicionFinal = parametros.Count - 1;
-            currentEnvironment.SetVariable(parameters[posicionFinal].Item1, structVar.Value, structVar.Type, structVar.Mutable, true);
+            currentEnvironment.SetVariable(parameters[posicionFinal].Item1, structVar.Value, structVar.Type, structVar.Mutable, true, context.Start);
             
             object valRet = Visit(body);
 
@@ -1932,10 +1936,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 {
                     throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
-                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
+                currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true, context.Start);
             }
             int posicionFinal = parametros.Count - 1;
-            currentEnvironment.SetVariable(parameters[posicionFinal].Item1, structVar.Value, structVar.Type, structVar.Mutable, true);
+            currentEnvironment.SetVariable(parameters[posicionFinal].Item1, structVar.Value, structVar.Type, structVar.Mutable, true, context.Start);
             Visit(body);            
 
         }

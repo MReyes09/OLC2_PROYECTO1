@@ -86,7 +86,7 @@ function App() {
                 output += errorJson.errores_sintacticos.join('\n') + '\n';
               }
             } else {
-              output += `Error del servidor: ${errorText}\n`;
+              output += `${errorText}\n`;
             }
           } catch {
             // Si no es un JSON válido, mostrar el texto como error genérico
