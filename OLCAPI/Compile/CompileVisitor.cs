@@ -1,8 +1,5 @@
 //using analyzer;
 using System.Globalization;
-using System.Reflection.Metadata;
-using Antlr4.Runtime.Misc;
-using Microsoft.Extensions.Logging.Abstractions;
 public class CompilerVisitor : gramaticaBaseVisitor<object>
 {
     public string output = "";
@@ -141,21 +138,17 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (!(left is int || left is double) || !(right is int || right is double))
         {
-            output += "Error al operar *|/ los tipos de datos no son operables.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al operar {context.op.Text} no se pueden operar {left} y {right}.", context.Start);
         }
 
         if (right == 0 && context.op.Text == "/" || right == 0 && context.op.Text == "%")
         {
-            output += "Error al operar / | % no se puede dividir entre 0.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al operar {context.op.Text} no se puede dividir entre 0.", context.Start);
         }
 
         if (context.op.Text == "%" && !(left is int && right is int))
         {
-
-            output += "Error al operar % los tipos de datos no son operables.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al operar % no se pueden operar {left} y {right}.", context.Start);
         }
 
         return context.op.Text switch
@@ -178,9 +171,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         if (left is string && right is string && context.op.Text == "+")
             return (string)left + (string)right;
 
-        output += "Error al operar +|- los tipos de datos no son operables.\n";
-        return null;
-
+        throw new ErrorSemantico($"Error-semántico: al operar {context.op.Text} no se pueden operar {left} y {right}.", context.Start);
     }
 
     // ----------------------------- OPERADORES LOGICOS -----------------------------
@@ -231,8 +222,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     }
                 }
             }
-            output += "Error al operar ==|!= los tipos de datos no son operables.\n";
-            return false;
+            throw new ErrorSemantico($"Error-semántico: al operar {context.op.Text} no se pueden operar {left} y {right}.", context.Start);
         }
 
         // Si los tipos son compatibles, hacemos la comparación
@@ -253,8 +243,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (!areComparable)
         {
-            output += "Error al operar < | > | <= | >= los tipos de datos no son operables.\n";
-            return false;
+            throw new ErrorSemantico($"Error-semántico: al operar {context.op.Text} no se pueden operar {left} y {right}.", context.Start);
         }
 
         // Comparar los caracteres como si fueran sus valores ASCII
@@ -280,7 +269,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         object right = Visit(context.expr(1));
 
         if (!(left is bool) || !(right is bool))
-            output += "Error al operar && | || los tipos de datos no son operables.\n";
+            throw new ErrorSemantico($"Error-semántico: al operar {context.op.Text} no se pueden operar {left} y {right}.", context.Start);
 
         return context.op.Text == "&&" ? (bool)left && (bool)right : (bool)left || (bool)right;
     }
@@ -291,8 +280,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         object value = Visit(context.expr());
         if (value is bool boolValue) return !boolValue;
 
-        output += "Error al operar ! los tipos de datos no son operables.\n";
-        return false;
+        throw new ErrorSemantico($" Error-semántico: al operar ! no se puede operar {value}.", context.Start);
     }
 
     // VisitBoolean
@@ -324,22 +312,21 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             catch (FormatException)
             {
-                output += "Error: El valor no tiene un formato válido para ser convertido a entero.\n";
+                throw new ErrorSemantico("Error-semántico: el valor no tiene un formato válido para ser convertido a entero.", context.Start);
             }
             catch (OverflowException)
             {
-                output += "Error: El valor está fuera del rango permitido para un entero.\n";
+                throw new ErrorSemantico("Error-semántico: el valor está fuera del rango permitido para un entero.", context.Start);
             }
             catch (Exception ex)
             {
-                output += $"Error inesperado al convertir a entero: {ex.Message}\n";
+                throw new ErrorSemantico($"Error inesperado al convertir a entero: {ex.Message}", context.Start);
             }
 
             return numero; // Devuelve null en caso de error
         }
 
-        output += "Error al convertir a entero, el valor no es un string válido.\n";
-        return null;
+        throw new ErrorSemantico("Error-semántico: el valor no es un string válido.", context.Start);
     }
 
     public override object VisitFloatToString(gramaticaParser.FloatToStringContext context)
@@ -355,22 +342,21 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             catch (FormatException)
             {
-                output += "Error: El valor no tiene un formato válido para ser convertido a flotante.\n";
+                throw new ErrorSemantico("Error-semántico: el valor no tiene un formato válido para ser convertido a flotante.", context.Start);
             }
             catch (OverflowException)
             {
-                output += "Error: El valor está fuera del rango permitido para un flotante.\n";
+                throw new ErrorSemantico("Error-semántico: el valor está fuera del rango permitido para un flotante.", context.Start);
             }
             catch (Exception ex)
             {
-                output += $"Error inesperado al convertir a flotante: {ex.Message}\n";
+                throw new ErrorSemantico($"Error inesperado al convertir a flotante: {ex.Message}", context.Start);
             }
 
             return numero; // Devuelve null en caso de error
         }
 
-        output += "Error al convertir a flotante, el valor no es un string válido.\n";
-        return null;
+        throw new ErrorSemantico("Error-semántico: el valor no es un string válido.", context.Start);
     }
 
     public override object VisitReflectType(gramaticaParser.ReflectTypeContext context)
@@ -466,8 +452,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (variable == null || variable.Value is not List<object> tempList)
         {
-            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al acceder al arreglo, la variable {id} no es un arreglo o no existe.", context.Start);
         }
 
         int valReturn = tempList.IndexOf(value);
@@ -483,13 +468,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (variable == null || variable.Value is not List<object> tempList)
         {
-            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al acceder al arreglo, la variable {id} no es un arreglo o no existe.", context.Start);
         }
         else if (value is not string)
         {
-            output += "Error al unir el arreglo, el valor no es un string.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al unir el arreglo, el valor no es un string.", context.Start);
         }
         else
         {
@@ -505,8 +488,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (variable == null || variable.Value is not List<object> tempList)
         {
-            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al acceder al arreglo, la variable {id} no es un arreglo o no existe.", context.Start);
         }
         int len =  0;
         if( context.posicion().Length == 0 )
@@ -526,16 +508,10 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 }
                 else
                 {
-                    output += "Error al acceder al arreglo, la funcion no es un arreglo o la posicion es invalida.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error-semántico: al acceder al arreglo, la función no es un arreglo o la posición es inválida.", context.Start);
                 }
             }
             len = listaBase.Count();
-        }
-
-        if( len == 0 ){
-            output += "Error al acceder al arreglo, la funcion no es un arreglo o la posicion es invalida.\n";
-            return null;
         }
 
         return len;
@@ -549,8 +525,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (variable == null || variable.Value is not List<object> tempList)
         {
-            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al acceder al arreglo, la variable {id} no es un arreglo o no existe.", context.Start);
         }
 
         if(value is List<Object>)
@@ -567,12 +542,8 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             return nuevaLista; // Retorna la copia con el nuevo valor
         
         }
-        else
-        {
-            output += "Error al agregar valor al arreglo, los tipos no son compatibles.\n";
-        }
 
-        return null;
+        throw new ErrorSemantico("Error-semántico: al agregar valor al arreglo, los tipos no son compatibles.", context.Start);
     }
 
     // ----------------------------- ACCESO A STRUCT -----------------------------
@@ -591,8 +562,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 varStruct = currentEnvironment.GetVariable(idStruct);
                 if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
                 {
-                    output += $"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.", context.Start);
                 }
                 datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
                 if( datosStruct.ContainsKey(idVar))
@@ -610,15 +580,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                         }
                         else
                         {
-                            output += $"Error: strucs anidados, la variable {idVar} no es un struct.\n";
-                            return null;
+                            throw new ErrorSemantico($"Error: strucs anidados, la variable {idVar} no es un struct.", context.Start);
                         }
                     }
                 }
                 else
                 {
-                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error: la variable {idVar} no existe en el struct {idStruct}.", context.Start);
                 }
             }
             else
@@ -637,12 +605,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     }
                     else
                     {
-                        output += $"Error: la variable {idVar} no es un struct.\n";
-                        return null;
+                        throw new ErrorSemantico($"Error: la variable {idVar} no es un struct.", context.Start);
                     }
                 }else
                 {
-                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+                    throw new ErrorSemantico($"Error: la variable {idVar} no existe en el struct {idStruct}.", context.Start);
                 }
             }
 
@@ -665,8 +632,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 varStruct = currentEnvironment.GetVariable(idStruct);
                 if(  varStruct == null || varStruct.Type != SymbolType.STRUCT )
                 {
-                    output += $"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.", context.Start);
                 }
                 datosStruct = (Dictionary<string, Symbol>)varStruct.Value;
                 if( datosStruct.ContainsKey(idVar))
@@ -685,15 +651,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                         }
                         else
                         {
-                            output += $"Error: strucs anidados, la variable {idVar} no es un struct.\n";
-                            return null;
+                            throw new ErrorSemantico($"Error: strucs anidados, la variable {idVar} no es un struct.", context.Start);
                         }
                     }
                 }
                 else
                 {
-                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error: la variable {idVar} no existe en el struct {idStruct}.", context.Start);
                 }
             }
             else
@@ -713,12 +677,11 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     }
                     else
                     {
-                        output += $"Error: la variable {idVar} no es un struct.\n";
-                        return null;
+                        throw new ErrorSemantico($"Error: la variable {idVar} no es un struct.", context.Start);
                     }
                 }else
                 {
-                    output += $"Error: la variable {idVar} no existe en el struct {idStruct}.\n";
+                    throw new ErrorSemantico($"Error: la variable {idVar} no existe en el struct {idStruct}.", context.Start);
                 }
             }
 
@@ -741,8 +704,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (value is null)
         {
-            output += "Error al asignar el valor a la variable, el valor es nulo.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, el valor es nulo.", context.Start);
         }
 
         if (value is List<Object> tempList)
@@ -754,8 +716,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
-                output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
-                return null;
+                throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
             }
         }
 
@@ -766,8 +727,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
                 return null;
             }
-            output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
         }
 
         currentEnvironment.SetVariable(id, value, type, mutabilidad, false);
@@ -807,8 +767,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                         currentEnvironment.SetVariable(id, (string)currentEnvironment.GetVariable(id).Value + (string)value, type, currentEnvironment.GetVariable(id).Mutable, false);
                         break;
                     case "-=":
-                        output += "Error -=: El tipo de variable no acepta operador -=.\n";
-                        break;
+                        throw new ErrorSemantico("Error-semántico: al operar -= no se pueden operar strings.", context.Start);
                 }
                 return null;
             }
@@ -840,14 +799,12 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
-                output += "Error +=: El tipo de variable no acepta operador +=.\n";
-                return null;
+                throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
             }
         }
         else
         {
-            output += "Error +=: Al asignar el valor a la variable, los tipos no son compatibles.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
         }
     }
 
@@ -858,8 +815,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (type != SymbolType.INT && type != SymbolType.FLOAT64)
         {
-            output += "Error ++: El tipo de variable no acepta operador ++.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: el tipo de variable no acepta operador ++.", context.Start);
         }
 
         switch (context.op.Text)
@@ -919,8 +875,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             var valid = IsValidType(value, symbolType);
             if (valid == false)
             {
-                output += "Error al asignar el valor a la variable, los tipos no son compatibles.\n";
-                return null;
+                throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
             }
         }
 
@@ -996,8 +951,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         nombreStruct = id;
         if (currentEnvironment.GetVariable(id) == null)
         {
-            output += "Error al acceder a la variable, la variable no existe.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: al acceder a la variable, la variable {id} no existe.", context.Start);
         }
         return currentEnvironment.GetVariable(id).Value;
     }
@@ -1109,8 +1063,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                         VariableStruct.Add(variable.GetText(), new Symbol('\0', symbolType, false));
                         break;
                     default:
-                        output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-                        return null;
+                        throw new ErrorSemantico("Error-semántico: al asignar el valor a la variable, los tipos no son compatibles.", context.Start);
                 }
                 tipoVar++;
             }
@@ -1132,14 +1085,12 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if( baseStruct != null && baseStruct.Type != SymbolType.STRUCT )
         {
-            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-            return null;
+            throw new ErrorSemantico($"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.", context.Start);
         }
         Dictionary<string, Symbol> datosStructBase = (Dictionary<string, Symbol>)baseStruct.Value;
         if( datosStructBase.Count() != context.ID_VARIABLE().Length - 2 )
         {
-            output += $"Error al crear una variable de tipo Struct, se esperaban {datosStructBase.Count} y se recibieron {context.ID_VARIABLE().Length - 2}\n";
-            return null;
+            throw new ErrorSemantico($"Error al crear una variable de tipo Struct, se esperaban {datosStructBase.Count} y se recibieron {context.ID_VARIABLE().Length - 2}", context.Start);
         }
 
         Dictionary<string, Symbol> copiaDeep = datosStructBase.ToDictionary(entry => entry.Key, entry =>  new Symbol(entry.Value.Value, entry.Value.Type, entry.Value.Mutable));
@@ -1148,8 +1099,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             Symbol varBaseStruct = copiaDeep[context.ID_VARIABLE(i).GetText()];
             if( varBaseStruct == null )
             {
-                output += $"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.\n";
-                return null;
+                throw new ErrorSemantico($"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.", context.Start);
             }
             var expVisit = Visit(context.expr(i-2));
             if( expVisit.Equals("nil") )
@@ -1164,8 +1114,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
-                output += $"Error al crear una variable de tipo Struct, los tipos no son compatibles.\n";
-                return null;
+                throw new ErrorSemantico("Error al crear una variable de tipo Struct, los tipos no son compatibles.", context.Start);
             }
         }
         currentEnvironment.SetVariable(context.ID_VARIABLE(1).GetText(), copiaDeep, SymbolType.STRUCT, false, true);
@@ -1187,14 +1136,12 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if( baseStruct != null && baseStruct.Type != SymbolType.STRUCT )
         {
-            output += "Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-            return null;
+            throw new ErrorSemantico($"Error al acceder a la variable, la variable {idStruct} no es un struct o no existe el struct.", context.Start);
         }
         Dictionary<string, Symbol> datosStructBase = (Dictionary<string, Symbol>)baseStruct.Value;
         if( datosStructBase.Count() != context.ID_VARIABLE().Length - 2 )
         {
-            output += $"Error al crear una variable de tipo Struct, se esperaban {datosStructBase.Count} y se recibieron {context.ID_VARIABLE().Length - 2}\n";
-            return null;
+            throw new ErrorSemantico($"Error al crear una variable de tipo Struct, se esperaban {datosStructBase.Count} y se recibieron {context.ID_VARIABLE().Length - 2}", context.Start);
         }
 
         Dictionary<string, Symbol> copiaDeep = datosStructBase.ToDictionary(entry => entry.Key, entry =>  new Symbol(entry.Value.Value, entry.Value.Type, entry.Value.Mutable));
@@ -1203,8 +1150,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             Symbol varBaseStruct = copiaDeep[context.ID_VARIABLE(i).GetText()];
             if( varBaseStruct == null )
             {
-                output += $"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.\n";
-                return null;
+                throw new ErrorSemantico($"Error al crear una variable de tipo Struct, la variable {context.ID_VARIABLE(i).GetText()} no existe en el struct base.", context.Start);
             }
             var expVisit = Visit(context.expr(i-2));
             if( expVisit.Equals("nil") )
@@ -1219,8 +1165,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
-                output += $"Error al crear una variable de tipo Struct, los tipos no son compatibles.\n";
-                return null;
+                throw new ErrorSemantico("Error al crear una variable de tipo Struct, los tipos no son compatibles.", context.Start);
             }
         }
         currentEnvironment.SetVariable(context.ID_VARIABLE(0).GetText(), copiaDeep, SymbolType.STRUCT, true, true);
@@ -1248,8 +1193,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (condition is not bool)
         {
-            output += "Error al evaluar la condición del if, no es un booleano.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al evaluar la condición del if, no es un booleano.", context.Start);
         }
 
         if ((bool)condition)
@@ -1308,8 +1252,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (condition is not bool)
         {
-            output += "Error al evaluar la condición del if, no es un booleano.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al evaluar la condición del if, no es un booleano.", context.Start);
         }
 
         if ((bool)condition)
@@ -1405,8 +1348,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         else
         {
-            output += "Error al evaluar la condición del case, los tipos no son compatibles.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al evaluar la condición del case, los tipos no son compatibles.", context.Start);
         }
 
         if (context.cases() != null)
@@ -1447,8 +1389,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (condition is not bool)
         {
-            output += "Error al evaluar la condición del for, no es un booleano.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al evaluar la condición del for, no es un booleano.", context.Start);
         }
 
         while ((bool)condition)
@@ -1492,8 +1433,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (condition is not bool)
         {
-            output += "Error al evaluar la condición del for, no es un booleano.\n";
-            return null;
+            throw new ErrorSemantico("Error-semántico: al evaluar la condición del for, no es un booleano.", context.Start);
         }
 
         while ((bool)condition)
@@ -1534,8 +1474,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         Symbol variableSlice = currentEnvironment.GetVariable(context.ID_VARIABLE(2).GetText());
         if( variableSlice.Value is not List<object> )
         {
-            output += "Error al recorrer el slice, la variable no es un slice.\n";
-            return null;
+            throw new ErrorSemantico("Error al recorrer el slice, la variable no es un slice.", context.Start);
         }
 
         List<object> slice = (List<object>)variableSlice.Value;
@@ -1696,8 +1635,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
             if (value == null)
             {
-                output += $"Error: No se pudo evaluar el parámetro en la posición {i} al llamar la función '{id}'.\n";
-                return null;
+                throw new ErrorSemantico($"Error-semántico: No se pudo evaluar el parámetro en la posición {i} al llamar la función '{id}'.", context.Start);
             }
 
             switch( value )
@@ -1718,8 +1656,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(charValue, SymbolType.RUNE, true)));
                     break;
                 default:
-                    output += $"Error: Tipo de parámetro no compatible en la posición {i} al llamar la función '{id}'.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error-semántico: Tipo de parámetro no compatible en la posición {i} al llamar la función '{id}'.", context.Start);
             }
         }
 
@@ -1727,8 +1664,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if( funcion == null )
         {
-            output += $"Error: La función '{id}' no existe.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: La función '{id}' no existe.", context.Start);
         }
 
         List<Tuple<string, Symbol>> parameters = funcion.Parameters;
@@ -1737,8 +1673,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if( parameters.Count != parametros.Count )
         {
-            output += $"Error: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
-            return null;
+            throw new ErrorSemantico($"Error-semántico: La función '{id}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.", context.Start);
         }
 
         Environment environment = new Environment(currentEnvironment);
@@ -1750,9 +1685,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 //Verifico antes los tipos
                 if( parametros[i].Item2.Type != parameters[i].Item2.Type )
                 {
-                    output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
-                    currentEnvironment = environment.Parent;
-                    return null;
+                    throw new ErrorSemantico($"Error-semántico: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
                 currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
             }
@@ -1765,18 +1698,14 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
-                output += $"Error: La función '{id}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.\n";
-                currentEnvironment = environment.Parent;
-                return null;
+                throw new ErrorSemantico($"Error-semántico: La función '{id}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.", context.Start);
             }
         }else{
             for(int i = 0; i < parametros.Count; i++){
                 //Verifico antes los tipos
                 if( parametros[i].Item2.Type != parameters[i].Item2.Type )
                 {
-                    output += $"Error: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
-                    currentEnvironment = environment.Parent;
-                    return null;
+                    throw new ErrorSemantico($"Error-semántico: La función '{id}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
                 currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
             }
@@ -1845,8 +1774,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         Symbol structVar = currentEnvironment.GetVariable(idStruct);
         if( structVar == null || structVar.Type != SymbolType.STRUCT )
         {
-            output += $"Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-            return null;
+            throw new ErrorSemantico($"Error al acceder a la variable, la variable no es un struct o no existe el struct.", context.Start);
         }
         parametros.Add(new Tuple<string, Symbol>(idVar, structVar));
         var body = context.block();
@@ -1884,8 +1812,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         Symbol structVar = currentEnvironment.GetVariable(nameStruct);
         if( structVar == null || structVar.Type != SymbolType.STRUCT )
         {
-            output += $"Error al acceder a la variable, la variable no es un struct o no existe el struct.\n";
-            return null;
+            throw new ErrorSemantico($"Error al acceder a la variable, la variable no es un struct o no existe el struct.", context.Start);
         }
         // Validacion 2 - Existe en el diccionario de Structs_Relational
         string structVarBase = "";
@@ -1905,8 +1832,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         if( !findStructVar )
         {
-            output += $"Error: la variable {nameStruct} no es un struct, no se puede acceder a la funcion {nameStruct}.\n";
-            return null;
+            throw new ErrorSemantico($"Error al acceder a la variable, la variable no es un struct o no existe el struct.", context.Start);
         }
         // Validacion 3 - Existe en el diccionario el nombre de la funcion en structFunc_Relational
         findStructVar = false;
@@ -1921,8 +1847,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         }
         if( !findStructVar )
         {
-            output += $"Error: la funcion {nameFunctStruct} no existe en el struct {nameStruct} o no es accesible para este.\n";
-            return null;
+            throw new ErrorSemantico($"Error al acceder a la variable, la variable no es un struct o no existe el struct.", context.Start);
         }
 
         //Agregar los parametros de la funcion
@@ -1932,8 +1857,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             object value = Visit(context.expr(i));
             if( value == null )
             {
-                output += $"Error: No se pudo evaluar el parámetro en la posición {i} al llamar la función '{nameFunctStruct}'.\n";
-                return null;
+                throw new ErrorSemantico($"Error: No se pudo evaluar el parámetro en la posición {i} al llamar la función '{nameFunctStruct}'.", context.Start);
             }
             switch( value )
             {
@@ -1953,15 +1877,13 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                     parametros.Add(new Tuple<string, Symbol>(i.ToString(), new Symbol(charValue, SymbolType.RUNE, true)));
                     break;
                 default:
-                    output += $"Error: Tipo de parámetro no compatible en la posición {i} al llamar la función '{nameFunctStruct}'.\n";
-                    return null;
+                    throw new ErrorSemantico($"Error: Tipo de parámetro no compatible en la posición {i} al llamar la función '{nameFunctStruct}'.", context.Start);
             }
         }
         var funcion = currentEnvironment.GetFuncion(nameFunctStruct);
         if(funcion == null)
         {
-            output += $"Error: La función '{nameFunctStruct}' no existe.\n";
-            return null;   
+            throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' no existe.", context.Start);
         }
 
         List<Tuple<string, Symbol>> parameters = funcion.Parameters;
@@ -1971,8 +1893,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
         parametros.Add(new Tuple<string, Symbol>(parameters[parameters.Count() - 1].Item1, structVar)  );
         if( parameters.Count != parametros.Count)
         {
-            output += $"Error: La función '{nameFunctStruct}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.\n";
-            return null;   
+            throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' espera {parameters.Count} parámetros, pero recibió {parametros.Count}.", context.Start);
         }
 
         Environment environment = new Environment(currentEnvironment);
@@ -1984,9 +1905,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 //Verifico antes los tipos
                 if( parametros[i].Item2.Type != parameters[i].Item2.Type )
                 {
-                    output += $"Error: La función '{nombreStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
-                    currentEnvironment = environment.Parent;
-                    return null;
+                    throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
                 currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
             }
@@ -2002,9 +1921,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
             }
             else
             {
-                output += $"Error: La función '{nombreStruct}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.\n";
-                currentEnvironment = environment.Parent;
-                return null;
+                throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' espera un retorno de tipo {tipoReturn}, pero se recibió un retorno de tipo {valRet.GetType()}.", context.Start);
             }
         }
         else
@@ -2013,9 +1930,7 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
                 //Verifico antes los tipos
                 if( parametros[i].Item2.Type != parameters[i].Item2.Type )
                 {
-                    output += $"Error: La función '{nombreStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.\n";
-                    currentEnvironment = environment.Parent;
-                    return null;
+                    throw new ErrorSemantico($"Error: La función '{nameFunctStruct}' espera un parametro de tipo {parameters[i].Item2.Type} en la posición {i}, pero recibió un parametro de tipo {parametros[i].Item2.Type}.", context.Start);
                 }
                 currentEnvironment.SetVariable(parameters[i].Item1, parametros[i].Item2.Value, parametros[i].Item2.Type, parametros[i].Item2.Mutable, true);
             }
@@ -2074,20 +1989,17 @@ public class CompilerVisitor : gramaticaBaseVisitor<object>
 
         if (variable == null || variable.Value is not List<object> tempList)
         {
-            output += "Error al acceder al arreglo, la variable no es un arreglo o no existe.\n";
-            return false;
+            throw new ErrorSemantico("Error al acceder al arreglo, la variable no es un arreglo o no existe.", null);
         }
 
         if (index is not int intIndex)
         {
-            output += "Error al acceder al arreglo, el índice no es un entero.\n";
-            return false;
+            throw new ErrorSemantico("Error al acceder al arreglo, el índice no es un entero.", null);
         }
 
         if (intIndex < 0 || intIndex >= tempList.Count)
         {
-            output += "Error al acceder al arreglo, el índice está fuera de rango.\n";
-            return false;
+            throw new ErrorSemantico("Error al acceder al arreglo, el índice está fuera de rango.", null);
         }
         return true;
     }

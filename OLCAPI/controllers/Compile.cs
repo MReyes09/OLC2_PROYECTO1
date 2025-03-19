@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading.Tasks;
 using Antlr4.Runtime;
-using Antlr4.Runtime.Tree;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Antlr4.Runtime.Misc;
+using Antlr4.Runtime.Atn;
 
 namespace api.Controllers
 {
@@ -36,64 +35,103 @@ namespace api.Controllers
                 return BadRequest(new { error = "Invalid request" });
             }
 
-            var inputStream = new AntlrInputStream(request.code);
-            var lexer = new gramaticaLexer(inputStream);
-            var tokens = new CommonTokenStream(lexer);
-            var parser = new gramaticaParser(tokens);
-
-            var tree = parser.inicio();
-            SearchTree searchTree = new SearchTree();
-            searchTree.Visit(tree);
-            var visitor = new CompilerVisitor();
-
-            foreach( var dclSimple in searchTree.declaracionesSimples )
+            try
             {
-                visitor.Visit(dclSimple);
-            }
+                var inputStream = new AntlrInputStream(request.code);
+                var lexer = new gramaticaLexer(inputStream);
+                var tokens = new CommonTokenStream(lexer);
+                var parser = new gramaticaParser(tokens);
 
-            foreach( var dclSlice in searchTree.declaracionesArreglos )
+                // Inicializar listeners
+                var lexicalErrorListener = new LexicalErrorListener();
+                var syntaxErrorListener = new SyntaxErrorListener();
+
+                lexer.RemoveErrorListeners();
+                lexer.AddErrorListener(lexicalErrorListener);
+
+                parser.RemoveErrorListeners();
+                parser.AddErrorListener(syntaxErrorListener);
+
+                var tree = parser.inicio();
+
+                // Si hay errores, devolverlos
+                if (lexicalErrorListener.Errors.Any() || syntaxErrorListener.Errors.Any())
+                {
+                    return BadRequest(new
+                    {
+                        errores_lexicos = lexicalErrorListener.Errors,
+                        errores_sintacticos = syntaxErrorListener.Errors
+                    });
+                }
+
+                // Si no hay errores, continuar con la compilación
+                SearchTree searchTree = new SearchTree();
+                searchTree.Visit(tree);
+                var visitor = new CompilerVisitor();
+
+                try
+                {
+                    foreach (var dclSimple in searchTree.declaracionesSimples)
+                    {
+                        visitor.Visit(dclSimple);
+                    }
+
+                    foreach (var dclSlice in searchTree.declaracionesArreglos)
+                    {
+                        visitor.Visit(dclSlice);
+                    }
+
+                    foreach (var dclStruct in searchTree.declaracionesStructs)
+                    {
+                        visitor.Visit(dclStruct);
+                    }
+
+                    foreach (var dlcStruct2 in searchTree.declaracionesStructs2)
+                    {
+                        visitor.Visit(dlcStruct2);
+                    }
+
+                    foreach (var asign in searchTree.asignaciones)
+                    {
+                        visitor.Visit(asign);
+                    }
+
+                    foreach (var stmt in searchTree.Funciones)
+                    {
+                        visitor.Visit(stmt);
+                    }
+
+                    foreach (var stmtStruct in searchTree.functStruct)
+                    {
+                        visitor.Visit(stmtStruct);
+                    }
+
+                    foreach (var stmtMain in searchTree.functMain)
+                    {
+                        visitor.Visit(stmtMain);
+                    }
+
+                    return Ok(new { result = visitor.output });
+                }
+                catch (ParseCanceledException ex)
+                {
+                    return BadRequest(new { error = "Error en el análisis del código: " + ex.Message });
+                }
+                catch (ErrorSemantico ex)
+                {
+                    return BadRequest(new { error = ex.Message });
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error inesperado en la compilación.");
+                    return StatusCode(500, new { error = "Error interno del servidor." });
+                }
+            }
+            catch (Exception ex)
             {
-                visitor.Visit(dclSlice);
+                _logger.LogError(ex, "Error inesperado en la compilación.");
+                return StatusCode(500, new { error = "Error interno del servidor." });
             }
-
-            foreach( var dclStruct in searchTree.declaracionesStructs )
-            {
-                visitor.Visit(dclStruct);
-            }
-
-            foreach( var dlcStruct2 in searchTree.declaracionesStructs2 )
-            {
-                visitor.Visit(dlcStruct2);
-            }
-
-            foreach( var asign in searchTree.asignaciones )
-            {
-                visitor.Visit(asign);
-            }
-
-            foreach( var stmt in searchTree.Funciones )
-            {
-                visitor.Visit(stmt);
-            }
-
-            foreach (var stmtStruct in searchTree.functStruct)
-            {
-                visitor.Visit(stmtStruct);
-            }
-
-            foreach( var stmtMain in searchTree.functMain )
-            {
-                visitor.Visit(stmtMain);
-            }
-
-            return Ok(new { result = visitor.output });
-
-            // var walker = new ParseTreeWalker();
-            // var lister = new CompilerListerner();
-            // walker.Walk(lister, tree);
-
-            // return Ok(new { result = lister.GetResult() });
         }
-
     }
 }

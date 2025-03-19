@@ -57,40 +57,67 @@ function App() {
 
     // Función para el botón 'Run'
 
-    let output = '';
     const runCode = async () => {
       const code = editorRef.current.getValue();
-
-        try {
-          const response = await fetch('http://localhost:5031/compile', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ code }), // Enviar JSON correcto
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            output += `Error del servidor: ${errorText}\n`;
-          } else {
-            const data = await response.json();
-            console.log(data);
-            // Capturar la respuesta correctamente
-            if (data.result) {
-              output = data.result; // Mostrar directamente el resultado del visitor
-              consoleEditorRef.current.setValue(output);
+      let output = '';
+    
+      try {
+        const response = await fetch('http://localhost:5031/compile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ code }),
+        });
+    
+        if (!response.ok) {
+          let errorText = await response.text();
+          
+          // Intentar parsear como JSON si es posible
+          try {
+            const errorJson = JSON.parse(errorText);
+            if (errorJson.errores_lexicos || errorJson.errores_sintacticos) {
+    
+              if (errorJson.errores_lexicos && errorJson.errores_lexicos.length > 0) {
+                output += errorJson.errores_lexicos.join('\n') + '\n';
+              }
+    
+              if (errorJson.errores_sintacticos && errorJson.errores_sintacticos.length > 0) {
+                output += errorJson.errores_sintacticos.join('\n') + '\n';
+              }
             } else {
-              output = 'No hay salida.';
-              consoleEditorRef.current.setValue(output);
+              output += `Error del servidor: ${errorText}\n`;
             }
+          } catch {
+            // Si no es un JSON válido, mostrar el texto como error genérico
+            output += `Error del servidor: ${errorText}\n`;
           }
-        } catch (error) {
-          output += 'Error al conectar con el servidor.\n';
-          console.error('Error:', error);
+        } else {
+          const data = await response.json();
+          console.log(data);
+    
+          if (data.errores_lexicos && data.errores_lexicos.length > 0) {
+            output += 'Errores léxicos:\n' + data.errores_lexicos.join('\n') + '\n';
+          }
+    
+          if (data.errores_sintacticos && data.errores_sintacticos.length > 0) {
+            output += 'Errores sintácticos:\n' + data.errores_sintacticos.join('\n') + '\n';
+          }
+    
+          if (data.result) {
+            output += `Resultado:\n${data.result}\n`;
+          } else if (!data.errores_lexicos && !data.errores_sintacticos) {
+            output += 'No hay salida.';
+          }
         }
+      } catch (error) {
+        output += 'Error al conectar con el servidor.\n';
+        console.error('Error:', error);
       }
-
+    
+      consoleEditorRef.current.setValue(output);
+    };
+    
 
     // función para el botón 'Clear'
     const clearCode = () => {
