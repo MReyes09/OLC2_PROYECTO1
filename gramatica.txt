@@ -1,0 +1,148 @@
+Aquí tienes la gramática convertida a una forma más tradicional, con `<NoTerminales>` y `Terminales` sin los signos de mayor y menor:  
+
+---
+
+### **Gramática en Forma Tradicional**
+  
+#### **Lexemas y Terminales**
+- `INT` → `[0-9]+`
+- `DOUBLE` → `[0-9]+ '.' [0-9]+`
+- `CHAR` → `' ' . ' '`
+- `STRING` → `" "` ( `\` . | ~[`"\\`] )* `" "`
+- `BOOL` → `"true"` | `"false"`
+- `ID_VARIABLE` → `[a-zA-Z_0-9]+`
+- `BLANCOS` → `[ \t\r\n]` *(se ignora)*
+- `COMENTARIOLINEA` → `"//"` .*? `"\n"` *(se ignora)*
+- `COMENTARIOMULTILINEA` → `"/*"` .*? `"*/"` *(se ignora)*  
+
+---
+
+#### **Reglas de Producción**  
+
+1. `<inicio>` → `<instrucciones>*`  
+
+2. `<instrucciones>` →  
+   - `<imprimir>`  
+   - `<sIf>`  
+   - `<sSwitch>`  
+   - `'{' <instrucciones>* '}'`  
+   - `<sFor>`  
+   - `<varDclSlice>`  
+   - `<varAsign>`  
+   - `<varDcl>`  
+   - `<varDclStruct>`  
+   - `<varStructDcl>`  
+   - `<break>`  
+   - `<continue>`  
+   - `<functions>`  
+   - `<functionStruct>`  
+   - `<varCallStatement>`  
+   - `<varCallFuncStruct>`  
+   - `<retorno>`  
+
+3. `<imprimir>` → `"fmt.Println(" (<expr> (',' <expr>)*)? ')' ';'?`  
+
+4. `<sIf>` →  
+   - `"if" <expr> <block> ("else" <block>)?`  
+   - `"if" <expr> <block> "else" <sIf>`  
+
+5. `<sSwitch>` → `"switch" <expr> '{' <cases> '}'`  
+
+6. `<cases>` →  
+   - `"case" <expr> ':' <instrucciones>* <cases>?`  
+   - `"default:" <instrucciones>*`  
+
+7. `<block>` → `'{' <instrucciones>* '}'`  
+
+8. `<sFor>` →  
+   - `"for" <expr> <block>`  
+   - `"for" <varDcl> ';' <expr> ';' <varAsign> <block>`  
+   - `"for" ID_VARIABLE ',' ID_VARIABLE ':=' "range" ID_VARIABLE <block>`  
+
+9. `<varDcl>` →  
+   - `"var" ID_VARIABLE <type> '=' <expr>`  
+   - `"var" ID_VARIABLE <type>`  
+   - `ID_VARIABLE ':=' <expr>`  
+
+10. `<varDclSlice>` →  
+    - `ID_VARIABLE <assign> (<nuevoSlice>)+ <type> '{' <contenidoSlice> '}'`  
+    - `"var" ID_VARIABLE (<nuevoSlice>)+ <type>`  
+
+11. `<assign>` → `':='` | `'='`  
+
+12. `<nuevoSlice>` → `'[]'`  
+
+13. `<contenidoSlice>` →  
+    - `<expr> (',' <expr>)*`  
+    - `'{' <contenidoSlice> '}' (',' ('{' <contenidoSlice> '}')?)*`  
+
+14. `<varDclStruct>` → `"type"? "struct"? ID_VARIABLE "struct"? '{' (ID_VARIABLE <type> ';'?)+'}'`  
+
+15. `<varStructDcl>` →  
+    - `ID_VARIABLE ID_VARIABLE '=' '{' ID_VARIABLE ':' <expr> (',' ID_VARIABLE ':' <expr>)+ '}'`  
+    - `ID_VARIABLE ':=' ID_VARIABLE '{' ID_VARIABLE ':' <expr> (',' (ID_VARIABLE ':' <expr>)?)+ '}'`  
+
+16. `<varAsign>` →  
+    - `ID_VARIABLE '=' <expr>`  
+    - `ID_VARIABLE <op> ('+='|'-=') <expr>`  
+    - `ID_VARIABLE <op> ('++'|'--')`  
+    - `ID_VARIABLE ('[' <expr> ']')+ '=' <expr>`  
+    - `ID_VARIABLE ('.' ID_VARIABLE)+ '=' <expr>`  
+
+17. `<expr>` →  
+    - `'-' <expr>`  
+    - `'!' <expr>`  
+    - `<expr> <op> ('*' | '/' | '%') <expr>`  
+    - `<expr> <op> ('+' | '-') <expr>`  
+    - `<expr> <op> ('<' | '>' | '<=' | '>=') <expr>`  
+    - `<expr> <op> ('==' | '!=') <expr>`  
+    - `<expr> <op> ('&&' | '||') <expr>`  
+    - `INT`  
+    - `DOUBLE`  
+    - `STRING`  
+    - `BOOL`  
+    - `ID_VARIABLE`  
+    - `CHAR`  
+    - `"nil"`  
+    - `'(' <expr> ')'`  
+    - `ID_VARIABLE ('[' <expr> ']')+`  
+    - `"slices.Index(" ID_VARIABLE ',' <expr> ')'`  
+    - `"strings.Join(" ID_VARIABLE ',' <expr> ')'`  
+    - `"len(" ID_VARIABLE (<posicion>)* ')'`  
+    - `"append(" ID_VARIABLE ',' <expr> ')'`  
+    - `"strconv.Atoi(" <expr> ')'`  
+    - `"strconv.ParseFloat(" <expr> ')'`  
+    - `"reflect.TypeOf(" <expr> ')'`  
+    - `ID_VARIABLE ('.' ID_VARIABLE)+ ';'?`  
+    - `<varCallStatement>`  
+    - `<varCallFuncStruct>`  
+
+18. `<posicion>` → `'[' <expr> ']'`  
+
+19. `<type>` →  
+    - `"int"`  
+    - `"float64"`  
+    - `"string"`  
+    - `"bool"`  
+    - `"rune"`  
+    - `"struct"`  
+    - `ID_VARIABLE`  
+
+20. `<break>` → `"break" ';'?`  
+
+21. `<continue>` → `"continue" ';'?`  
+
+22. `<functions>` → `"func" ID_VARIABLE '(' (ID_VARIABLE <type> (',' ID_VARIABLE <type>)*)? ')' <valRet>? <block>`  
+
+23. `<functionStruct>` → `"func" '(' ID_VARIABLE ID_VARIABLE ')' ID_VARIABLE '(' <defParams>? ')' <valRet>? <block>`  
+
+24. `<defParams>` → `ID_VARIABLE <type> (',' ID_VARIABLE <type>)*`  
+
+25. `<varCallStatement>` → `ID_VARIABLE '(' (<expr> (',' <expr>)*)? ')' ';'?`  
+
+26. `<varCallFuncStruct>` → `ID_VARIABLE '.' ID_VARIABLE '(' (<expr> (',' <expr>)*)? ')' ';'?`  
+
+27. `<valRet>` → `<type>`  
+
+28. `<retorno>` → `"return" <expr>? ';'?`  
+
