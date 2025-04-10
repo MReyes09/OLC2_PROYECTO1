@@ -4721,11 +4721,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/matthew-reyes/Escritorio/Proyectos COMPI 2/OLC2_Proyectos/OLC2_PROYECTO1_202202233/OLCAPI/OLCAPI.csproj",
+      "projectUniqueName": "/home/matthew-reyes/Escritorio/Proyectos COMPI 2/OLC2_Proyectos/OLC2_PROYECTO/OLC2_PROYECTO1_202202233/OLCAPI/OLCAPI.csproj",
       "projectName": "OLCAPI",
-      "projectPath": "/home/matthew-reyes/Escritorio/Proyectos COMPI 2/OLC2_Proyectos/OLC2_PROYECTO1_202202233/OLCAPI/OLCAPI.csproj",
+      "projectPath": "/home/matthew-reyes/Escritorio/Proyectos COMPI 2/OLC2_Proyectos/OLC2_PROYECTO/OLC2_PROYECTO1_202202233/OLCAPI/OLCAPI.csproj",
       "packagesPath": "/home/matthew-reyes/.nuget/packages/",
-      "outputPath": "/home/matthew-reyes/Escritorio/Proyectos COMPI 2/OLC2_Proyectos/OLC2_PROYECTO1_202202233/OLCAPI/obj/",
+      "outputPath": "/home/matthew-reyes/Escritorio/Proyectos COMPI 2/OLC2_Proyectos/OLC2_PROYECTO/OLC2_PROYECTO1_202202233/OLCAPI/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/matthew-reyes/.nuget/NuGet/NuGet.Config"
